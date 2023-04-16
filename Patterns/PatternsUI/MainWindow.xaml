@@ -5,8 +5,28 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PatternsUI"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Patternz" Height="450" Width="800">
     <Grid>
-
+        <Menu x:Name="MainMenu">
+            <MenuItem x:Name="File" Header="File">
+                <MenuItem Header="New"/>
+                <MenuItem Header="Save"/>
+                <Separator/>
+                <MenuItem Header="Exit"/>
+            </MenuItem>
+            <MenuItem x:Name="Edit" Header="Edit">
+                <MenuItem Header="Undo"/>
+                <MenuItem Header="Redo"/>
+            </MenuItem>
+            <MenuItem x:Name="Help" Header="Help">
+                <MenuItem Header="About"/>
+            </MenuItem>
+            
+        </Menu>
+        <Button x:Name="Profile" Margin="751,10,10,390">
+            <Button.Content>
+                <Image Name="ProfilePic" Source="Resources/Admin.png"/>
+            </Button.Content>
+        </Button>
     </Grid>
 </Window>
