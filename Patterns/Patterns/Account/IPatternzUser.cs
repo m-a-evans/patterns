@@ -1,4 +1,6 @@
-﻿namespace Patterns.Account
+﻿using System.Drawing;
+
+namespace Patterns.Account
 {
     /// <summary>
     /// Interface representing a user of the Patternz app
@@ -29,5 +31,10 @@
         /// The username of the current user, used to login
         /// </summary>
         string Username { get; }
+
+        /// <summary>
+        /// A URL that points to the picture resource used by this user
+        /// </summary>
+        string PictureUrl { get; }
     }
 }

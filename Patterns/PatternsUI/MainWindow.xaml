@@ -4,29 +4,45 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:PatternsUI"
+        xmlns:converters="clr-namespace:PatternsUI.Converters"
+        xmlns:vm="clr-namespace:PatternsUI.ViewModel"
+        xmlns:view="clr-namespace:PatternsUI.View"
         mc:Ignorable="d"
         Title="Patternz" Height="450" Width="800">
-    <Grid>
-        <Menu x:Name="MainMenu">
-            <MenuItem x:Name="File" Header="File">
-                <MenuItem Header="New"/>
-                <MenuItem Header="Save"/>
-                <Separator/>
-                <MenuItem Header="Exit"/>
-            </MenuItem>
-            <MenuItem x:Name="Edit" Header="Edit">
-                <MenuItem Header="Undo"/>
-                <MenuItem Header="Redo"/>
-            </MenuItem>
-            <MenuItem x:Name="Help" Header="Help">
-                <MenuItem Header="About"/>
-            </MenuItem>
-            
-        </Menu>
-        <Button x:Name="Profile" Margin="751,10,10,390">
-            <Button.Content>
-                <Image Name="ProfilePic" Source="Resources/Admin.png"/>
-            </Button.Content>
-        </Button>
+
+    <Window.Resources>
+        <vm:MainWindowViewModel x:Key="ViewModel"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+    </Window.Resources>
+    
+    <Grid DataContext="{StaticResource ViewModel}">
+        <Grid>
+            <view:PatternzView Content="{Binding CurrentPage}"/>
+        </Grid>
+        <Grid Visibility="{Binding IsMenuVisible, Converter={StaticResource BoolToVisibility}}">
+            <Grid x:Name="MenuGrid" 
+              Height="20" 
+              VerticalAlignment="Top" 
+              Margin="0">
+                <Menu x:Name="MainMenu">
+                    <MenuItem x:Name="File" Header="File" ItemsSource="{Binding FileMenuItems}"/>
+                    <MenuItem x:Name="Edit" Header="Edit" ItemsSource="{Binding EditMenuItems}"/>
+                    <MenuItem x:Name="Help" Header="Help" ItemsSource="{Binding HelpMenuItems}"/>
+                </Menu>
+            </Grid>
+
+            <Grid x:Name="ProfileOptions" HorizontalAlignment="Right" Background="Gray" Height="70" Width="45" VerticalAlignment="Top" Margin="10,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="25"/>
+                </Grid.RowDefinitions>
+                <Button x:Name="Profile" HorizontalAlignment="Right" Grid.Row="0">
+                    <Button.Content>
+                        <Image Name="ProfilePic" Source="/Resources/Images/Admin.png"/>
+                    </Button.Content>
+                </Button>
+                <Button x:Name="LogoutButton" Content="Logout" Grid.Row="1" Command="{Binding LogoutCommand}"/>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

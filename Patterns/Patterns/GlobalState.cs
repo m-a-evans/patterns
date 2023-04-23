@@ -1,6 +1,8 @@
 ﻿using Patterns.Account;
 using Patterns.Proxy;
+using Patterns.Security;
 using System;
+using System.Threading.Tasks;
 
 namespace Patterns
 {
@@ -12,6 +14,8 @@ namespace Patterns
         private IUserAccount _userManager = new AccountProxy(PatternzUser.AnyUser);
 
         private IPatternzUser _currentUser;
+
+        private Task _loadUsersFromStore;
 
         /// <summary>
         /// Gets the current user. Will be AnyUser if no one is logged in
@@ -34,6 +38,7 @@ namespace Patterns
         public GlobalState()
         {
             _currentUser = PatternzUser.AnyUser;
+            _loadUsersFromStore = _userManager.TryReadUsersFromStoreAsync();
         }
 
         /// <summary>
@@ -49,8 +54,17 @@ namespace Patterns
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
         public bool PerformLogin(string username, string password)
-        {
-            throw new NotImplementedException();
+        { 
+            if (!_loadUsersFromStore.IsCompleted)
+                _loadUsersFromStore.Wait();
+            IPatternzUser? user;
+            if (_userManager.TryGetUser(username, out user))
+            {
+                Pbkdf2DataHasher hasher = new();
+
+                return hasher.ValidateHash(password, user!.PasswordHash);
+            }
+            return false;
         }
 
         /// <summary>
@@ -60,7 +74,8 @@ namespace Patterns
         /// <exception cref="NotImplementedException"></exception>
         public bool PerformLogout()
         {
-            throw new NotImplementedException();
+            CurrentUser = PatternzUser.AnyUser;
+            return true;
         }
     }
 }

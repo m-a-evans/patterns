@@ -1,4 +1,7 @@
-﻿namespace Patterns.Account
+﻿using System.Drawing;
+using System.Dynamic;
+
+namespace Patterns.Account
 {
     /// <summary>
     /// Concrete implementation of the IPatternzUser interface
@@ -28,6 +31,7 @@
             PasswordHash = passwordHash;
             Username = username;
             Permissions = permissions;
+            PictureUrl = string.Empty;
         }
 
         /// <summary>
@@ -63,5 +67,10 @@
         /// The username of the current user, used to login
         /// </summary>
         public string Username { get; set; }
+
+        /// <summary>
+        /// A URL that points to the picture resource used by this user
+        /// </summary>
+        public string PictureUrl { get; set; }
     }
 }

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -146,7 +147,7 @@ namespace Patterns.Account
                     if (users != null)
                     {
                         _users = new();
-                        foreach (PatternzUser user in users) 
+                        foreach (IPatternzUser user in users) 
                         {
                             _users.Add(user.Username, user);
                         }
@@ -173,7 +174,13 @@ namespace Patterns.Account
 
             try
             {
-                string jsonContents = JsonSerializer.Serialize(_users);
+                CreateDirectoryIfNotExists(pathToStore);
+                List<IPatternzUser> userList = new (_users.Count);
+                foreach(string username in _users.Keys)
+                {
+                    userList.Add(_users[username]);
+                }
+                string jsonContents = JsonSerializer.Serialize(userList.ToArray());
                 await File.WriteAllTextAsync(pathToStore, jsonContents);
             }
             catch (Exception ex)
@@ -182,6 +189,19 @@ namespace Patterns.Account
                 return false;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Creates a directory for the path to the store if it doesn't already exist
+        /// </summary>
+        /// <param name="pathToStore"></param>
+        private void CreateDirectoryIfNotExists(string pathToStore) 
+        {
+            string? path = Path.GetDirectoryName(pathToStore);
+            if (path != null && !Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
         }
     }
 }

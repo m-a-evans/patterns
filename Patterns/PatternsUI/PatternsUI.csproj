@@ -8,7 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\" />
+    <None Remove="Resources\Images\Admin.png" />
+    <None Remove="Resources\Images\Title.png" />
+    <None Remove="Resources\Images\User.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -16,13 +18,29 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Login.xaml.cs">
+    <ProjectReference Include="..\Patterns\Patterns.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Images\Admin.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Images\Title.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Images\User.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="View\Login.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
 
   <ItemGroup>
-    <Page Update="Login.xaml">
+    <Page Update="View\Login.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
