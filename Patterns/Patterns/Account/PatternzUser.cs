@@ -1,7 +1,4 @@
-﻿using System.Drawing;
-using System.Dynamic;
-
-namespace Patterns.Account
+﻿namespace Patterns.Account
 {
     /// <summary>
     /// Concrete implementation of the IPatternzUser interface

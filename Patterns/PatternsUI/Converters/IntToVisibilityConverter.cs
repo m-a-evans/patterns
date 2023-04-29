@@ -5,20 +5,16 @@ using System.Windows.Data;
 
 namespace PatternsUI.Converters
 {
-    internal class BoolToVisibilityConverter : IValueConverter
+    internal class IntToVisibilityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return (bool) value ? Visibility.Visible : Visibility.Collapsed;
+            return (int)value > 0 ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            if (value is Visibility vis)
-            {
-                return vis == Visibility.Visible;
-            }
-            return false;
+            throw new NotImplementedException();
         }
     }
 }

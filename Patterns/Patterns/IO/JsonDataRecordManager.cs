@@ -44,7 +44,7 @@ namespace Patterns.IO
         /// <param name="collectionName">The name of the collection to write</param>
         /// <param name="dataRecords">The collection to write</param>
         /// <returns>The number of bytes written</returns>
-        public long WriteUserRecords(string collectionName, List<DataRecord> dataRecords)
+        public long WriteDataRecords(string collectionName, List<DataRecord> dataRecords)
         {
             DataRecord[] userRecordsAsArr = dataRecords.ToArray();
 

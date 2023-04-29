@@ -1,10 +1,13 @@
 ﻿using Patterns.Account;
-using System.Windows.Controls;
 
 namespace Utility
 {
     internal class Program
     {
+        /// <summary>
+        /// Bootstraps an admin user to make the rest of the Patternz application usable
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
             const string PathToStore = @".\data\users.dat";
@@ -18,7 +21,7 @@ namespace Utility
             }
             PatternzUserAccount acct = new();
 
-            string password = string.Empty;
+            string password;
 
             do
             {

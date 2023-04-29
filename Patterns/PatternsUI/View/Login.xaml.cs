@@ -34,5 +34,13 @@ namespace PatternsUI.View
                 viewModel.Password = pwBox.Password;
             }
         }
+
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && SubmitButton.IsEnabled && ViewModel is LoginViewModel viewModel)
+            {
+                viewModel.SubmitCommand.Execute(null);
+            }
+        }
     }
 }

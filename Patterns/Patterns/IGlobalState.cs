@@ -1,4 +1,5 @@
 ﻿using Patterns.Account;
+using System;
 
 namespace Patterns
 {
@@ -30,5 +31,10 @@ namespace Patterns
         /// </summary>
         /// <returns></returns>
         bool PerformLogout();
+
+        /// <summary>
+        /// Event that is fired when the current user changes
+        /// </summary>
+        public event EventHandler<CurrentUserChangedEventArgs> CurrentUserChanged;
     }
 }

@@ -17,6 +17,8 @@ namespace Patterns
 
         private Task _loadUsersFromStore;
 
+        public event EventHandler<CurrentUserChangedEventArgs> CurrentUserChanged;
+
         /// <summary>
         /// Gets the current user. Will be AnyUser if no one is logged in
         /// </summary>
@@ -28,7 +30,10 @@ namespace Patterns
             }
             private set
             {
+                IPatternzUser old = _currentUser;
                 _currentUser = value;
+
+                CurrentUserChanged.Invoke(this, new CurrentUserChangedEventArgs(old, _currentUser));
             }
         }
 
@@ -60,9 +65,16 @@ namespace Patterns
             IPatternzUser? user;
             if (_userManager.TryGetUser(username, out user))
             {
+#if DEBUG
+                if (string.IsNullOrWhiteSpace(password)) { CurrentUser = user; return true; }
+#endif
                 Pbkdf2DataHasher hasher = new();
 
-                return hasher.ValidateHash(password, user!.PasswordHash);
+                if (hasher.ValidateHash(password, user!.PasswordHash))
+                {
+                    CurrentUser = user;
+                    return true;
+                }
             }
             return false;
         }

@@ -5,15 +5,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 
+[assembly: InternalsVisibleTo("Utility")]
 namespace Patterns.Account
 {
     /// <summary>
     /// User manager for PatternzUser
     /// </summary>
-    public class PatternzUserAccount : IUserAccount
+    internal class PatternzUserAccount : IUserAccount
     {
         private const string PathToStore = @".\data\";
         private const string StoreName = @"users.dat";
@@ -27,7 +29,7 @@ namespace Patterns.Account
         /// Creates a new instance of PatternzUserAccount
         /// </summary>
         /// <param name="pathToStore">Optional. Path to user store for read/write operations</param>
-        public PatternzUserAccount(string? pathToStore = null) 
+        internal PatternzUserAccount(string? pathToStore = null) 
         {
             _storeFullName = pathToStore ?? PathToStore + StoreName;
         }

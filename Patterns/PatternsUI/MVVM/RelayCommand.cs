@@ -7,7 +7,7 @@ namespace PatternsUI.MVVM
     /// <summary>
     /// Simple implementation of ICommand
     /// </summary>
-    internal class RelayCommand : ICommand
+    public class RelayCommand : ICommand
     {
         /// <summary>
         /// The action to execute when the command is invoked

@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-namespace Patterns.Account
+﻿namespace Patterns.Account
 {
     /// <summary>
     /// Interface representing a user of the Patternz app

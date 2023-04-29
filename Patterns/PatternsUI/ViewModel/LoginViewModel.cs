@@ -1,20 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Data;
-using System.Windows.Input;
-using Patterns;
+﻿using Patterns;
 using PatternsUI.MVVM;
 using PatternsUI.View;
 
 namespace PatternsUI.ViewModel
 {
+    /// <summary>
+    /// Handles logic related to logging in
+    /// </summary>
     internal class LoginViewModel : ViewModelBase
     {
         private string _username;
         private string _password;
+        private bool _isError = false;
+
         public string Username
         {
             get => _username;
@@ -41,6 +39,19 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        public bool IsError
+        {
+            get => _isError;
+            set
+            {
+                if (_isError != value) 
+                {
+                    _isError = value;
+                    NotifyPropertyChanged(nameof(IsError));
+                }
+            }
+        }
+
         public RelayCommand SubmitCommand { get; private set; }
 
         public LoginViewModel()
@@ -52,13 +63,14 @@ namespace PatternsUI.ViewModel
 
         public void SubmitUsernameAndPassword(object? _)
         {
+            IsError = false;
             if (GlobalStateSingleton.Instance.PerformLogin(_username, _password))
             {
                 Navigate(typeof(DataRecordsView));
             }
             else
             {
-                // display error
+                IsError = true;
             }
         }
 

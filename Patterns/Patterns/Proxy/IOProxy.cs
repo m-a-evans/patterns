@@ -47,11 +47,11 @@ namespace Patterns.Proxy
         /// <param name="collectionName">The name of the collection to write</param>
         /// <param name="dataRecords">The collection to write</param>
         /// <returns>The number of bytes written</returns>
-        public long WriteUserRecords(string collectionName, List<DataRecord> userRecord)
+        public long WriteDataRecords(string collectionName, List<DataRecord> userRecord)
         {
             if ((_user.Permissions & Permission.WriteAccess) == Permission.WriteAccess)
             {
-                return _userManager.WriteUserRecords(collectionName, userRecord);
+                return _userManager.WriteDataRecords(collectionName, userRecord);
             }
             return ThrowHelper.ThrowUnauthorizedAccessException<long>();
         }
