@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 
 namespace PatternsUI.MVVM
@@ -44,7 +41,7 @@ namespace PatternsUI.MVVM
         /// Method to alert property changed handlers that a property has changed
         /// </summary>
         /// <param name="propertyName"></param>
-        protected void NotifyPropertyChanged(string propertyName)
+        protected void NotifyPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             if (PropertyChanged != null)
             {

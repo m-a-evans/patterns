@@ -1,9 +1,9 @@
-﻿namespace Patterns.Account
+﻿namespace Patterns.Account.Model
 {
     /// <summary>
     /// Concrete implementation of the IPatternzUser interface
     /// </summary>
-    public class PatternzUser : IPatternzUser
+    internal class PatternzUser : IPatternzUser
     {
         /// <summary>
         /// A flag indicating "any old user"
@@ -22,7 +22,7 @@
         /// <param name="passwordHash">Hash of the password of the user</param>
         /// <param name="displayName">Optional. The in-app displayed name</param>
         /// <param name="permissions">Optional. What permissions this user has. Defaults to None</param>
-        public PatternzUser(string username, string passwordHash, string? displayName = null, Permission permissions = Permission.None) 
+        public PatternzUser(string username, string passwordHash, string? displayName = null, Permission permissions = Permission.None)
         {
             DisplayName = displayName ?? string.Empty;
             PasswordHash = passwordHash;
@@ -39,7 +39,7 @@
         /// <param name="passwordHash"></param>
         /// <param name="displayName"></param>
         /// <param name="permissions"></param>
-        private PatternzUser(bool isAnyUser, string username, string passwordHash, string? displayName = null, Permission permissions = Permission.None) 
+        private PatternzUser(bool isAnyUser, string username, string passwordHash, string? displayName = null, Permission permissions = Permission.None)
             : this(username, passwordHash, displayName, permissions)
         {
             IsAnyUser = isAnyUser;

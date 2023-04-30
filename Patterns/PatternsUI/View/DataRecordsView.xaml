@@ -9,12 +9,14 @@
              d:DataContext="{d:DesignInstance Type=viewmodel:DataRecordsViewModel}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
+    
     <view:PatternzView.Resources>
         <viewmodel:DataRecordsViewModel x:Key="ViewModel"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </view:PatternzView.Resources>
+    
     <Grid Background="Ivory">
-        <Grid x:Name="MenuSpacing" Height="25" VerticalAlignment="Center" HorizontalAlignment="Center">
+        <Grid x:Name="MenuSpacing" Height="25" VerticalAlignment="Top" HorizontalAlignment="Center">
             <TextBlock Text="Welcome to the data records page"/>
         </Grid>
     </Grid>

@@ -4,6 +4,9 @@
              xmlns:local="clr-namespace:PatternsUI"
              StartupUri="View/MainWindow.xaml" >
     <Application.Resources>
-         
+        <Style TargetType="MenuItem">
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
     </Application.Resources>
 </Application>

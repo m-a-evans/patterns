@@ -1,17 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PatternsUI.ViewModel;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace PatternsUI.View
 {
@@ -23,6 +12,26 @@ namespace PatternsUI.View
         public UserManagementView()
         {
             InitializeComponent();
+        }
+
+        /// <summary>
+        /// Executes the save command on the view model
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (ViewModel is UserManagementViewModel viewModel)
+            {
+                if (PasswordBox.Password.Length > 0)
+                {
+                    viewModel.SaveCommand.Execute(PasswordBox.Password);
+                }
+                else
+                {
+                    viewModel.SaveCommand.Execute(null);
+                }
+            }
         }
     }
 }

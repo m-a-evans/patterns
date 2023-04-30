@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Patterns;
 using Patterns.Account;
+using Patterns.Account.Model;
 using PatternsUI.MVVM;
+using PatternsUI.MVVM.Messages;
 using PatternsUI.View;
 using System;
 using System.Collections.ObjectModel;
@@ -17,17 +19,24 @@ namespace PatternsUI.ViewModel
     /// like managing menu items, or the profile picture. This class also provides a way for other views to navigate
     /// between each other.
     /// </summary>
-    internal class MainWindowViewModel : ViewModelBase
+    public class MainWindowViewModel : ViewModelBase
     {
-        private PatternzView _currentView;
+        #region Fields
+
+        private PatternzView _currentPage;
+
+        #endregion
+
+        #region Properties
+
         public PatternzView CurrentPage { 
-            get => _currentView; 
+            get => _currentPage; 
             set
             {
-                if (_currentView != value)
+                if (_currentPage != value)
                 {
-                    _currentView = value;
-                    NotifyPropertyChanged(nameof(CurrentPage));
+                    _currentPage = value;
+                    NotifyPropertyChanged();
                 }
             }
         }
@@ -38,13 +47,21 @@ namespace PatternsUI.ViewModel
         public bool IsMenuVisible { get => CurrentPage.GetType() != typeof(Login); }
         public ImageSource CurrentUserPicture { get; private set; }
 
+        public string CurrentUserName { get; private set; }
+
+        #endregion
+
+        #region Constructors and Methods
+
         public MainWindowViewModel()
         {
             LogoutCommand = new RelayCommand(Logout, (_) => 
-                GlobalStateSingleton.Instance.CurrentUser != PatternzUser.AnyUser);
+                !Coordinator.Instance.UserManager.CurrentUser.IsAnyUser);
             ExitCommand = new RelayCommand(QuitApplication);
+            AboutCommand = new RelayCommand(About);
+            CurrentUserPicture = new BitmapImage();
 
-            GlobalStateSingleton.Instance.CurrentUserChanged += OnCurrentUserChanged;
+            Coordinator.Instance.UserManager.CurrentUserChanged += OnCurrentUserChanged;
 
             NavigateToView(typeof(Login));
         }
@@ -60,6 +77,8 @@ namespace PatternsUI.ViewModel
             {
                 CurrentUserPicture = new BitmapImage();
             }
+            CurrentUserName = e.NewUser.DisplayName;
+            NotifyPropertyChanged(nameof(CurrentUserName));
             NotifyPropertyChanged(nameof(CurrentUserPicture));
         }
 
@@ -67,7 +86,7 @@ namespace PatternsUI.ViewModel
         {
             Action logout = () =>
             {
-                GlobalStateSingleton.Instance.PerformLogout();
+                Coordinator.Instance.UserManager.PerformLogout();
                 NavigateToView(typeof(Login));
             };
 
@@ -80,6 +99,10 @@ namespace PatternsUI.ViewModel
                 logout();
             }
         }
+
+        #endregion
+
+        #region Private Methods
 
         private void NavigateToView(Type viewType)
         {
@@ -112,19 +135,49 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        private void About(object? _)
+        {
+            ShowPopupMessage aboutMsg = new("About Patternz", "Patternz is an educational application " +
+                "designed to explore and apply various design patterns to create an extensible, robust " +
+                "application framework.");
+            Messenger.Send(aboutMsg);
+        }
+
         private void PrepareMenuItems()
         {
             FileMenuItems = CurrentPage.ViewModel?.FileMenuItems ?? new ObservableCollection<MenuItem>();
             FileMenuItems.Add(new MenuItem() { Header = "Exit", Command = ExitCommand });
-            EditMenuItems = CurrentPage.ViewModel?.EditMenuItems ?? new ObservableCollection<MenuItem>();
-            ViewMenuItems = CurrentPage.ViewModel?.ViewMenuItems ?? new ObservableCollection<MenuItem>();
-            HelpMenuItems = CurrentPage.ViewModel?.HelpMenuItems ?? new ObservableCollection<MenuItem>();
-
+            AttachMenuItemNames(FileMenuItems);
             NotifyPropertyChanged(nameof(FileMenuItems));
+
+            EditMenuItems = CurrentPage.ViewModel?.EditMenuItems ?? new ObservableCollection<MenuItem>();
+            AttachMenuItemNames(EditMenuItems);
             NotifyPropertyChanged(nameof(EditMenuItems));
-            NotifyPropertyChanged(nameof(HelpMenuItems));
-            NotifyPropertyChanged(nameof(IsMenuVisible));
+
+            ViewMenuItems = CurrentPage.ViewModel?.ViewMenuItems ?? new ObservableCollection<MenuItem>();
+            AttachMenuItemNames(ViewMenuItems);
             NotifyPropertyChanged(nameof(ViewMenuItems));
+
+            HelpMenuItems = CurrentPage.ViewModel?.HelpMenuItems ?? new ObservableCollection<MenuItem>();
+            HelpMenuItems.Add(new MenuItem() { Header = "About Application", Command = AboutCommand });
+            AttachMenuItemNames(HelpMenuItems);
+            NotifyPropertyChanged(nameof(HelpMenuItems));
+
+            NotifyPropertyChanged(nameof(IsMenuVisible));
+            
         }
+
+        private void AttachMenuItemNames(ObservableCollection<MenuItem> menuItems)
+        {
+            foreach (MenuItem menuItem in menuItems) 
+            {
+                if (string.IsNullOrEmpty(menuItem.Name) && menuItem.Header is string header)
+                {
+                    menuItem.Name = "mnu" + header.Replace(" ", "");
+                }
+            }
+        }
+
+        #endregion
     }
 }

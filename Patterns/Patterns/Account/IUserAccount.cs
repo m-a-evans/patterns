@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Patterns.Account.Model;
 
 namespace Patterns.Account
 {
@@ -28,7 +30,7 @@ namespace Patterns.Account
         /// <param name="username">The desired username</param>
         /// <param name="password">The password of the new user</param>
         /// <returns>The newly created PatternzUser</returns>
-        PatternzUser CreateUser(string username, string password);
+        IPatternzUser CreateUser(string username, string password);
 
         /// <summary>
         /// Updates an existing PatternzUser. Password information must match
@@ -38,14 +40,14 @@ namespace Patterns.Account
         /// PasswordHash in the records</param>
         /// <param name="newPassword">Optional. Use this parameter if you desire to change the user's password</param>
         /// <returns>The updated PatternzUser</returns>
-        PatternzUser UpdateUser(PatternzUser user, string? newPassword);
+        IPatternzUser UpdateUser(IPatternzUser user, string? newPassword);
 
         /// <summary>
         /// Removes a user from the user records
         /// </summary>
         /// <param name="user">The user to remove</param>
         /// <returns>True if a user was removed</returns>
-        bool DeleteUser(PatternzUser user);
+        bool DeleteUser(IPatternzUser user);
 
         /// <summary>
         /// Attempts to find a user from the user records
@@ -54,5 +56,11 @@ namespace Patterns.Account
         /// <param name="foundUser">The found user record. May be null if the user can't be found</param>
         /// <returns>True if the user was found</returns>
         bool TryGetUser(string username, out IPatternzUser? foundUser);
+
+        /// <summary>
+        /// Returns a copy of the list of users.
+        /// </summary>
+        /// <returns></returns>
+        ICollection<IPatternzUser> GetUserListCopy();
     }
 }

@@ -7,12 +7,16 @@ namespace PatternsUI.ViewModel
     /// <summary>
     /// Handles logic related to logging in
     /// </summary>
-    internal class LoginViewModel : ViewModelBase
+    public class LoginViewModel : ViewModelBase
     {
+        #region Fields
+
         private string _username;
-        private string _password;
         private bool _isError = false;
 
+        #endregion
+
+        #region Properties
         public string Username
         {
             get => _username;
@@ -21,20 +25,7 @@ namespace PatternsUI.ViewModel
                 if (_username != value)
                 {
                     _username = value;
-                    NotifyPropertyChanged(nameof(Username));
-                }
-            }
-        }
-
-        public string Password
-        {
-            private get => _password;
-            set
-            {
-                if (_password != value)
-                {
-                    _password = value;
-                    NotifyPropertyChanged(nameof(Password));
+                    NotifyPropertyChanged();
                 }
             }
         }
@@ -47,24 +38,34 @@ namespace PatternsUI.ViewModel
                 if (_isError != value) 
                 {
                     _isError = value;
-                    NotifyPropertyChanged(nameof(IsError));
+                    NotifyPropertyChanged();
                 }
             }
         }
 
+        /// <summary>
+        /// Command to submit username and password
+        /// </summary>
         public RelayCommand SubmitCommand { get; private set; }
 
+        #endregion
+
+        #region Constructors and Methods
         public LoginViewModel()
         {
             _username = string.Empty;
-            _password = string.Empty;
-            SubmitCommand = new RelayCommand(SubmitUsernameAndPassword, CanSubmitUsernameAndPassword);
+            SubmitCommand = new RelayCommand(SubmitUsernameAndPassword);
         }
 
-        public void SubmitUsernameAndPassword(object? _)
+        /// <summary>
+        /// Submits the entered username with the provided password. If the credentials are accepted,
+        /// this method will navigate to the next view.
+        /// </summary>
+        /// <param name="password">The password to submit along with the username</param>
+        public void SubmitUsernameAndPassword(object? password)
         {
             IsError = false;
-            if (GlobalStateSingleton.Instance.PerformLogin(_username, _password))
+            if (password is string pw && Coordinator.Instance.UserManager.PerformLogin(_username, pw))
             {
                 Navigate(typeof(DataRecordsView));
             }
@@ -74,11 +75,6 @@ namespace PatternsUI.ViewModel
             }
         }
 
-        public bool CanSubmitUsernameAndPassword(object? _)
-        {
-            if (string.IsNullOrEmpty(_username) ||  string.IsNullOrEmpty(_password)) 
-                return false;
-            return true;
-        }
+        #endregion
     }
 }

@@ -11,9 +11,19 @@ namespace PatternsUI.ViewModel
     /// </summary>
     public class DataRecordsViewModel : ViewModelBase
     {
+        #region Fields
+
+        #endregion
+
+        #region Properties
+
         public bool IsDirty = false;
         public RelayCommand NavigateToUserManagementCommand { get; private set; }
         public RelayCommand ShowAboutCommand { get; private set; }
+
+        #endregion
+
+        #region Constructors and Methods
         public DataRecordsViewModel() 
         {
             ShowAboutCommand = new RelayCommand(ShowAbout);
@@ -38,6 +48,10 @@ namespace PatternsUI.ViewModel
                 exit();
             }
         }
+
+        #endregion
+
+        #region Private Methods
 
         private void NavigateToUserManagement(object? _)
         {
@@ -67,9 +81,11 @@ namespace PatternsUI.ViewModel
         private void ShowAbout(object? _)
         {
             Messenger.Send(new ShowPopupMessage("About Data Records", "The Data Records page is where you can add, edit and remove data records, as well as load and save them." +
-                "\n\n This page makes use of the command pattern to allow you to undo or redo, as well as restore interrupted work." +
-                "\n\n This page also makes use of the factory pattern to allow you to easily switch between save formats." +
-                "\n\n Finally, this page makes use of the proxy pattern, ensuring the current user has adequate rights to perform these actions."));
+                "\n\nThis page makes use of the command pattern to allow you to undo or redo, as well as restore interrupted work." +
+                "\n\nThis page also makes use of the factory pattern to allow you to easily switch between save formats." +
+                "\n\nFinally, this page makes use of the proxy pattern, ensuring the current user has adequate rights to perform these actions."));
         }
+
+        #endregion
     }
 }

@@ -28,13 +28,30 @@
         <Image HorizontalAlignment="Center" Height="148" VerticalAlignment="Top" Width="370" Grid.Row="0" Source="/Resources/Images/Title.png"/>
         <StackPanel Orientation="Horizontal" Grid.Row="1" HorizontalAlignment="Center" >
             <Label x:Name="lblUserName" Content="Username" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-            <TextBox x:Name="UserName" Text="{Binding Username}" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Width="234" KeyDown="OnKeyDown"/>
+            <TextBox x:Name="UserName" 
+                     Text="{Binding Username}" 
+                     HorizontalAlignment="Center" 
+                     TextWrapping="Wrap" 
+                     VerticalAlignment="Center" 
+                     Width="234" 
+                     KeyUp="OnKeyUp"/>
         </StackPanel>
         <StackPanel Orientation="Horizontal" Grid.Row="2" HorizontalAlignment="Center">
             <Label x:Name="lblPassword" Content="Password" HorizontalAlignment="Center" Margin="2,0" VerticalAlignment="Center" />
-            <PasswordBox x:Name="Password" PasswordChanged="OnPasswordChanged" PasswordChar="*" HorizontalAlignment="Center" VerticalAlignment="Center" Width="234" KeyDown="OnKeyDown"/>
+            <PasswordBox x:Name="Password" 
+                         PasswordChar="*" 
+                         HorizontalAlignment="Center" 
+                         VerticalAlignment="Center" 
+                         Width="234" 
+                         KeyUp="OnKeyUp"/>
         </StackPanel>
-        <Button x:Name="SubmitButton" HorizontalAlignment="Center" VerticalAlignment="Top" Height="39" Width="97" Grid.Row="3" Command="{Binding SubmitCommand}">
+        <Button x:Name="SubmitButton" 
+                HorizontalAlignment="Center" 
+                VerticalAlignment="Top" 
+                Height="39" Width="97" 
+                Grid.Row="3" 
+                IsEnabled="False"
+                Click="SubmitButton_Click">
             <Button.Content>
                 <TextBlock Text="Submit" FontSize="24"/>
             </Button.Content>

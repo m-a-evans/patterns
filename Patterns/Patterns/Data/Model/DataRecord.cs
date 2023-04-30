@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Patterns.Model.Data
+namespace Patterns.Data.Model
 {
     /// <summary>
     /// A record of data

@@ -1,15 +1,14 @@
-﻿using Patterns.Account;
-using Patterns.Proxy;
+﻿using Patterns.Account.Model;
 using Patterns.Security;
 using System;
 using System.Threading.Tasks;
 
-namespace Patterns
+namespace Patterns.Account
 {
     /// <summary>
     /// Contains fields that are globally accessible to the application
     /// </summary>
-    public class GlobalState : IGlobalState
+    internal class UserManager : IUserManager
     {
         private IUserAccount _userManager = new AccountProxy(PatternzUser.AnyUser);
 
@@ -17,7 +16,7 @@ namespace Patterns
 
         private Task _loadUsersFromStore;
 
-        public event EventHandler<CurrentUserChangedEventArgs> CurrentUserChanged;
+        public event EventHandler<CurrentUserChangedEventArgs>? CurrentUserChanged;
 
         /// <summary>
         /// Gets the current user. Will be AnyUser if no one is logged in
@@ -33,14 +32,14 @@ namespace Patterns
                 IPatternzUser old = _currentUser;
                 _currentUser = value;
 
-                CurrentUserChanged.Invoke(this, new CurrentUserChangedEventArgs(old, _currentUser));
+                CurrentUserChanged?.Invoke(this, new CurrentUserChangedEventArgs(old, _currentUser));
             }
         }
 
         /// <summary>
         /// Constructor, sets current user to AnyUser
         /// </summary>
-        public GlobalState()
+        public UserManager()
         {
             _currentUser = PatternzUser.AnyUser;
             _loadUsersFromStore = _userManager.TryReadUsersFromStoreAsync();
@@ -52,14 +51,13 @@ namespace Patterns
         public bool IsLoggedIn { get { return !CurrentUser.IsAnyUser; } }
 
         /// <summary>
-        /// 
+        /// Attempts to perform a login for the given username and password
         /// </summary>
         /// <param name="username"></param>
         /// <param name="password"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+        /// <returns>True if the login succeeded</returns>
         public bool PerformLogin(string username, string password)
-        { 
+        {
             if (!_loadUsersFromStore.IsCompleted)
                 _loadUsersFromStore.Wait();
             IPatternzUser? user;
@@ -80,14 +78,12 @@ namespace Patterns
         }
 
         /// <summary>
-        /// 
+        /// Logs out the current user
         /// </summary>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public bool PerformLogout()
+        public void PerformLogout()
         {
             CurrentUser = PatternzUser.AnyUser;
-            return true;
         }
     }
 }

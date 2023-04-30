@@ -1,4 +1,4 @@
-﻿using Patterns.Model.Data;
+﻿using Patterns.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,7 +17,7 @@ namespace Patterns.IO
         /// <param name="xmlFileName">The name of the data records to parse</param>
         /// <param name="dataRecords">The resultant list of records, if parsed successfully</param>
         /// <returns>True if the records were able to be parsed</returns>
-        public bool TryParseRecords(string xmlFileName, out List<DataRecord> userRecords)
+        public bool TryParseRecords(string xmlFileName, out List<DataRecord>? userRecords)
         {
             userRecords = new List<DataRecord>();
             if (!File.Exists(xmlFileName))

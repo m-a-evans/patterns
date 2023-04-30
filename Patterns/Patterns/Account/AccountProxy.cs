@@ -1,13 +1,14 @@
 ﻿using CommunityToolkit.Diagnostics;
-using Patterns.Account;
+using Patterns.Account.Model;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Patterns.Proxy
+namespace Patterns.Account
 {
     /// <summary>
     /// The PatternzUserAccount proxy, which makes sure the user has correct permissions to perform operations
     /// </summary>
-    internal class AccountProxy : IUserAccount
+    public class AccountProxy : IUserAccount
     {
         private readonly IUserAccount _userManager;
         private readonly IPatternzUser _user;
@@ -15,10 +16,10 @@ namespace Patterns.Proxy
         /// <summary>
         /// Constructor which takes in a user to check permissions on
         /// </summary>
-        /// <param name="user">The user that is performing the operations</param>
-        public AccountProxy(IPatternzUser user) 
+        /// <param name="currentUser">The user that is performing the operations</param>
+        public AccountProxy(IPatternzUser currentUser)
         {
-            _user = user;
+            _user = currentUser;
             _userManager = new PatternzUserAccount();
         }
 
@@ -29,9 +30,9 @@ namespace Patterns.Proxy
         /// <param name="username">The desired username</param>
         /// <param name="password">The password of the new user</param>
         /// <returns>The newly created PatternzUser</returns>
-        public PatternzUser CreateUser(string username, string password)
+        public IPatternzUser CreateUser(string username, string password)
         {
-            if ((_user.Permissions | Permission.AddUser) == Permission.AddUser) 
+            if ((_user.Permissions | Permission.AddUser) == Permission.AddUser)
             {
                 return _userManager.CreateUser(username, password);
             }
@@ -43,13 +44,22 @@ namespace Patterns.Proxy
         /// </summary>
         /// <param name="user">The user to remove</param>
         /// <returns>True if a user was removed</returns>
-        public bool DeleteUser(PatternzUser user)
+        public bool DeleteUser(IPatternzUser user)
         {
             if ((_user.Permissions | Permission.RemoveUser) == Permission.RemoveUser)
             {
                 return _userManager.DeleteUser(user);
             }
             return ThrowHelper.ThrowUnauthorizedAccessException<bool>();
+        }
+
+        /// <summary>
+        /// Gets a copy of the list of users
+        /// </summary>
+        /// <returns></returns>
+        public ICollection<IPatternzUser> GetUserListCopy()
+        {
+            return _userManager.GetUserListCopy();
         }
 
         /// <summary>
@@ -92,13 +102,13 @@ namespace Patterns.Proxy
         /// PasswordHash in the records</param>
         /// <param name="newPassword">Optional. Use this parameter if you desire to change the user's password</param>
         /// <returns>The updated PatternzUser</returns>
-        public PatternzUser UpdateUser(PatternzUser user, string? newPassword)
+        public IPatternzUser UpdateUser(IPatternzUser user, string? newPassword)
         {
-            if ((_user.Permissions & Permission.UpdateUser) == Permission.UpdateUser) 
+            if ((_user.Permissions & Permission.UpdateUser) == Permission.UpdateUser)
             {
                 return _userManager.UpdateUser(user, newPassword);
             }
-            return ThrowHelper.ThrowUnauthorizedAccessException<PatternzUser>();
+            return ThrowHelper.ThrowUnauthorizedAccessException<IPatternzUser>();
         }
     }
 }

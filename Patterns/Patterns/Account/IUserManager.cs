@@ -1,12 +1,12 @@
-﻿using Patterns.Account;
+﻿using Patterns.Account.Model;
 using System;
 
-namespace Patterns
+namespace Patterns.Account
 {
     /// <summary>
     /// Interface representing globally available fields
     /// </summary>
-    public interface IGlobalState
+    public interface IUserManager
     {
         /// <summary>
         /// The current user performing operations
@@ -30,7 +30,7 @@ namespace Patterns
         /// Logs out the current user
         /// </summary>
         /// <returns></returns>
-        bool PerformLogout();
+        void PerformLogout();
 
         /// <summary>
         /// Event that is fired when the current user changes

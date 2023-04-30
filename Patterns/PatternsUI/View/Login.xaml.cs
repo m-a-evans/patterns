@@ -1,19 +1,6 @@
-﻿using PatternsUI.View;
-using PatternsUI.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using PatternsUI.ViewModel;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace PatternsUI.View
 {
@@ -25,22 +12,57 @@ namespace PatternsUI.View
         public Login()
         {
             InitializeComponent();
+            Loaded += OnLoaded;
         }
 
-        public void OnPasswordChanged(object sender,  RoutedEventArgs e)
+        public void OnLoaded(object sender, RoutedEventArgs e)
         {
-            if (ViewModel is LoginViewModel viewModel && sender is PasswordBox pwBox)
+            UserName.Focus();
+        }
+
+        /// <summary>
+        /// Checks to see whether the submit button can be enabled. Also
+        /// links the "enter" button to the submit command
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void OnKeyUp(object sender, KeyEventArgs e)
+        {
+            SubmitButton.IsEnabled = RequiredFieldsFilled();
+            if (e.Key == Key.Enter && SubmitButton.IsEnabled)
             {
-                viewModel.Password = pwBox.Password;
+                Submit();
             }
         }
 
-        private void OnKeyDown(object sender, KeyEventArgs e)
+        /// <summary>
+        /// Executes the submit command
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SubmitButton_Click(object sender, RoutedEventArgs e)
         {
-            if (e.Key == Key.Enter && SubmitButton.IsEnabled && ViewModel is LoginViewModel viewModel)
+            Submit();
+        }
+
+        /// <summary>
+        /// Executes the submit command on the viewmodel
+        /// </summary>
+        private void Submit()
+        {
+            if (ViewModel is LoginViewModel viewModel) 
             {
-                viewModel.SubmitCommand.Execute(null);
+                viewModel.SubmitCommand.Execute(Password.Password);
             }
+        }
+
+        /// <summary>
+        /// Returns true if every necessary field has a value
+        /// </summary>
+        /// <returns></returns>
+        private bool RequiredFieldsFilled()
+        {
+            return Password.Password.Length > 0 && UserName.Text.Length > 0;
         }
     }
 }

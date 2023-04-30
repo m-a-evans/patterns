@@ -1,10 +1,10 @@
 ﻿using CommunityToolkit.Diagnostics;
+using Patterns.Account.Model;
 using Patterns.Security;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -57,11 +57,11 @@ namespace Patterns.Account
         /// PasswordHash in the records</param>
         /// <param name="newPassword">Optional. Use this parameter if you desire to change the user's password</param>
         /// <returns>The updated PatternzUser</returns>
-        public PatternzUser UpdateUser(PatternzUser user, string? newPassword = null)
+        public IPatternzUser UpdateUser(IPatternzUser user, string? newPassword = null)
         {
             Guard.IsNotNull(user, $"{nameof(user)} cannot be null");
 
-            IPatternzUser? foundUser = null;
+            IPatternzUser? foundUser;
             if (!_users.TryGetValue(user.Username, out foundUser))
             {
                 ThrowHelper.ThrowInvalidOperationException($"User {user.Username} not found");
@@ -71,7 +71,7 @@ namespace Patterns.Account
                 ThrowHelper.ThrowInvalidOperationException($"Password not valid for user");
             }
 
-            PatternzUser result = user;
+            IPatternzUser result = user;
             if (newPassword != null)
             {
                 if (string.IsNullOrWhiteSpace(newPassword))
@@ -93,7 +93,7 @@ namespace Patterns.Account
         /// </summary>
         /// <param name="user">The user to remove</param>
         /// <returns>True if a user was removed</returns>
-        public bool DeleteUser(PatternzUser user)
+        public bool DeleteUser(IPatternzUser user)
         {
             Guard.IsNotNull(user, $"{nameof(user)} cannot be null");
 
@@ -113,7 +113,7 @@ namespace Patterns.Account
         /// <param name="username">The desired username</param>
         /// <param name="password">The password of the new user</param>
         /// <returns>The newly created PatternzUser</returns>
-        public PatternzUser CreateUser(string username, string password)
+        public IPatternzUser CreateUser(string username, string password)
         {
             Guard.IsNotNullOrWhiteSpace(username, nameof(username));
             Guard.IsNotNullOrWhiteSpace(password, nameof(password));
@@ -125,7 +125,7 @@ namespace Patterns.Account
             Pbkdf2DataHasher hasher = new();
 
             string hashed = hasher.HashString(password);
-            PatternzUser result = new(username, hashed);
+            IPatternzUser result = new PatternzUser(username, hashed);
             _users.Add(username, result);
             return result;
         }
@@ -204,6 +204,23 @@ namespace Patterns.Account
             {
                 Directory.CreateDirectory(path);
             }
+        }
+
+        /// <summary>
+        /// Gets a copy of the list of users
+        /// </summary>
+        /// <returns></returns>
+        public ICollection<IPatternzUser> GetUserListCopy()
+        {
+            List<IPatternzUser> result = new();
+            foreach (IPatternzUser user in _users.Values) 
+            {
+                result.Add(new PatternzUser(user.Username, user.PasswordHash, user.DisplayName, user.Permissions)
+                {
+                    PictureUrl = user.PictureUrl
+                });
+            }
+            return result;
         }
     }
 }

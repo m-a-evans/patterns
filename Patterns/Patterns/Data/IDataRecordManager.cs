@@ -1,4 +1,4 @@
-﻿using Patterns.Model.Data;
+﻿using Patterns.Data.Model;
 using System.Collections.Generic;
 
 namespace Patterns.IO
@@ -22,6 +22,6 @@ namespace Patterns.IO
         /// <param name="recordName">The name of the data records to parse</param>
         /// <param name="dataRecords">The resultant list of records, if parsed successfully</param>
         /// <returns>True if the records were able to be parsed</returns>
-        public bool TryParseRecords(string recordName, out List<DataRecord> dataRecords);
+        public bool TryParseRecords(string recordName, out List<DataRecord>? dataRecords);
     }
 }

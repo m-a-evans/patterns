@@ -1,4 +1,4 @@
-﻿using Patterns.Model.Data;
+﻿using Patterns.Data.Model;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
