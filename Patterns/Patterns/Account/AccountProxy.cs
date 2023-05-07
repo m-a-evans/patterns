@@ -17,10 +17,10 @@ namespace Patterns.Account
         /// Constructor which takes in a user to check permissions on
         /// </summary>
         /// <param name="currentUser">The user that is performing the operations</param>
-        public AccountProxy(IPatternzUser currentUser)
+        public AccountProxy(IPatternzUser currentUser, string? pathToStore = null)
         {
             _user = currentUser;
-            _userManager = new PatternzUserAccount();
+            _userManager = new PatternzUserAccount(pathToStore);
         }
 
         /// <summary>
@@ -30,11 +30,11 @@ namespace Patterns.Account
         /// <param name="username">The desired username</param>
         /// <param name="password">The password of the new user</param>
         /// <returns>The newly created PatternzUser</returns>
-        public IPatternzUser CreateUser(string username, string password)
+        public IPatternzUser CreateUser(string username, string password, string? displayName, string? pictureUrl, Permission permissions)
         {
-            if ((_user.Permissions | Permission.AddUser) == Permission.AddUser)
+            if ((_user.Permissions & Permission.AddUser) == Permission.AddUser)
             {
-                return _userManager.CreateUser(username, password);
+                return _userManager.CreateUser(username, password, displayName, pictureUrl, permissions);
             }
             return ThrowHelper.ThrowUnauthorizedAccessException<PatternzUser>();
         }
@@ -46,7 +46,7 @@ namespace Patterns.Account
         /// <returns>True if a user was removed</returns>
         public bool DeleteUser(IPatternzUser user)
         {
-            if ((_user.Permissions | Permission.RemoveUser) == Permission.RemoveUser)
+            if ((_user.Permissions & Permission.RemoveUser) == Permission.RemoveUser)
             {
                 return _userManager.DeleteUser(user);
             }

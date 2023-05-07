@@ -9,13 +9,16 @@ namespace PatternsUI.MVVM
     public class MessageRecipient
     {
         public Guid Id { get; } = Guid.NewGuid();
+        // Recipient is a weak reference to let it be garbage collected,
+        // in the case where it forgets to unregister itself from the messenger 
+        // but goes out of scope
         public WeakReference<object> Recipient;
-        public WeakReference<Action<IMessage>> Target;
+        public Action<IMessage> Target;
 
         public MessageRecipient(object recipient, Action<IMessage> target)
         {
             Recipient = new WeakReference<object>(recipient);
-            Target = new WeakReference<Action<IMessage>>(target);
+            Target = target;
         }
     }
 }

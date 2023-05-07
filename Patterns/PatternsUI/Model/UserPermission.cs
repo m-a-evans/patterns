@@ -1,15 +1,29 @@
 ﻿using Patterns.Account.Model;
+using PatternsUI.MVVM;
+using System.ComponentModel;
 
 namespace PatternsUI.Model
 {
     /// <summary>
     /// Represents a user's individual permission in a display friendly way
     /// </summary>
-    public class UserPermission
+    public class UserPermission : PropertyNotifyer
     {
+        private bool _isEnabled;
         public string Name { get => GetName(); }
         public Permission Permission { get; private set; }
-        public bool IsEnabled { get; set; }
+        public bool IsEnabled
+        {
+            get => _isEnabled;
+            set
+            {
+                if (_isEnabled != value)
+                {
+                    _isEnabled = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
 
         public UserPermission(Permission permission)
         {

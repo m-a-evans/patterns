@@ -17,11 +17,12 @@ namespace PatternsUI.View
         /// <summary>
         /// The viewmodel which controls the logic for this view
         /// </summary>
-        public ViewModelBase? ViewModel { get; private set; }
+        public IViewModel? ViewModel { get; private set; }
 
         public PatternzView()
         {
-            
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         /// <summary>
@@ -31,10 +32,20 @@ namespace PatternsUI.View
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);
-            if (TryFindResource(ViewModelName) is ViewModelBase viewModel)
+            if (TryFindResource(ViewModelName) is IViewModel viewModel)
             {
                 ViewModel = viewModel;
             }
+        }
+
+        private void OnLoaded(object sender, EventArgs e) 
+        {
+            ViewModel?.OnLoaded();
+        }
+
+        private void OnUnloaded(object sender, EventArgs e)
+        {
+            ViewModel?.OnUnloaded();
         }
     }
 }

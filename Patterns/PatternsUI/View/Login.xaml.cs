@@ -1,4 +1,5 @@
-﻿using PatternsUI.ViewModel;
+﻿using PatternsUI.MVVM;
+using PatternsUI.MVVM.Messages;
 using System.Windows;
 using System.Windows.Input;
 
@@ -13,13 +14,34 @@ namespace PatternsUI.View
         {
             InitializeComponent();
             Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
         public void OnLoaded(object sender, RoutedEventArgs e)
         {
             UserName.Focus();
+            Messenger.Register<RetrievePasswordMessage>(this, OnRetrievePasswordMessage);
         }
 
+        public void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            Messenger.UnregisterAll(this);
+        }
+
+        /// <summary>
+        /// Gets the password out of the password box when something asks for it.
+        /// Because the password box protects the entered value, it cannot be
+        /// bound normally, and must be explicitly extracted
+        /// </summary>
+        /// <param name="message"></param>
+        private void OnRetrievePasswordMessage(IMessage message)
+        {
+            if (message is RetrievePasswordMessage retrievePw)
+            {
+                retrievePw.Callback(Password.Password);
+            }
+        }
+        
         /// <summary>
         /// Checks to see whether the submit button can be enabled. Also
         /// links the "enter" button to the submit command
@@ -28,34 +50,9 @@ namespace PatternsUI.View
         /// <param name="e"></param>
         private void OnKeyUp(object sender, KeyEventArgs e)
         {
-            SubmitButton.IsEnabled = RequiredFieldsFilled();
-            if (e.Key == Key.Enter && SubmitButton.IsEnabled)
-            {
-                Submit();
-            }
+            SubmitButton.IsEnabled = RequiredFieldsFilled();            
         }
-
-        /// <summary>
-        /// Executes the submit command
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SubmitButton_Click(object sender, RoutedEventArgs e)
-        {
-            Submit();
-        }
-
-        /// <summary>
-        /// Executes the submit command on the viewmodel
-        /// </summary>
-        private void Submit()
-        {
-            if (ViewModel is LoginViewModel viewModel) 
-            {
-                viewModel.SubmitCommand.Execute(Password.Password);
-            }
-        }
-
+        
         /// <summary>
         /// Returns true if every necessary field has a value
         /// </summary>

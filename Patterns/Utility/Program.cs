@@ -30,10 +30,8 @@ namespace Utility
                 password = Console.ReadLine() ?? string.Empty;
             } while (string.IsNullOrWhiteSpace(password));
 
-            IPatternzUser admin = acct.CreateUser("admin", password);
-            admin.Permissions = Permission.WriteAccess | Permission.ReadAccess | Permission.UpdateUser | Permission.AddUser | Permission.RemoveUser;
-            admin.PictureUrl = @"/Resources/Images/Admin.png";
-            admin.DisplayName = "Administrator";
+            IPatternzUser admin = acct.CreateUser("admin", password, "Administrator", @"/Resources/Images/Admin.png", 
+                Permission.WriteAccess | Permission.ReadAccess | Permission.UpdateUser | Permission.AddUser | Permission.RemoveUser);
 
             acct.UpdateUser(admin);
 

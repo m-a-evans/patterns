@@ -1,4 +1,5 @@
-﻿using PatternsUI.ViewModel;
+﻿using PatternsUI.MVVM;
+using PatternsUI.MVVM.Messages;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -12,25 +13,50 @@ namespace PatternsUI.View
         public UserManagementView()
         {
             InitializeComponent();
+            Loaded += OnLoaded;
+            Unloaded += OnUnloaded;
         }
 
-        /// <summary>
-        /// Executes the save command on the view model
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        private void OnRetrievePassword(IMessage message)
         {
-            if (ViewModel is UserManagementViewModel viewModel)
+            if (message is RetrievePasswordMessage msg)
             {
-                if (PasswordBox.Password.Length > 0)
+                msg.Callback(PasswordBox.Password);
+            }
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            Messenger.Register<ClearUIMessage>(this, OnClearUIMessage);
+            Messenger.Register<RetrievePasswordMessage>(this, OnRetrievePassword);
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            Messenger.UnregisterAll(this);
+        }
+
+        private void OnClearUIMessage(IMessage message)
+        {
+            PasswordBox.Password = string.Empty;
+        }
+
+        private void UsernameTextBox_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            if (e.NewValue is bool isVisible && isVisible)
+            {
+                Dispatcher.BeginInvoke(() =>
                 {
-                    viewModel.SaveCommand.Execute(PasswordBox.Password);
-                }
-                else
-                {
-                    viewModel.SaveCommand.Execute(null);
-                }
+                    UsernameTextBox.Focus();
+                });
+            }
+        }
+
+        private void AddButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (UsernameTextBox.Visibility == Visibility.Visible)
+            {
+                UsernameTextBox.Focus();
             }
         }
     }

@@ -1,6 +1,8 @@
 ﻿using Patterns.Account;
 using Patterns.Data.Model;
 using Patterns.IO;
+using System.Configuration;
+using System.Runtime.CompilerServices;
 
 namespace Patterns
 {
@@ -23,5 +25,11 @@ namespace Patterns
         /// <param name="dataRecordManagerFormat"></param>
         /// <returns></returns>
         IDataRecordManager GetDataRecordManager(DataRecordFormat dataRecordManagerType);
+
+        /// <summary>
+        /// Configures the components of the Coordinator with application settings
+        /// </summary>
+        /// <param name="settings"></param>
+        void Configure(ApplicationSettingsBase settings);
     }
 }

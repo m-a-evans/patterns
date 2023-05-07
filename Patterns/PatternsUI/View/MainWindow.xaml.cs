@@ -26,6 +26,18 @@ namespace PatternsUI
         {
             Messenger.Register<ShowPopupMessage>(this, ShowPopup);
             Messenger.Register<ShowYesNoPopupMessage>(this, ShowYesNoPopup);
+            Messenger.Register<ClearFocusMessage>(this, ClearFocus);
+            Messenger.Register<ClearUIMessage>(this, ClearUI);
+        }
+
+        private void ClearFocus(IMessage message)
+        {
+            FocusSink.Focus();
+        }
+
+        private void ClearUI(IMessage message) 
+        {
+            LogoutButton.Visibility = Visibility.Collapsed;
         }
 
         private void ShowPopup(IMessage message)

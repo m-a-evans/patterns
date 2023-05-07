@@ -30,7 +30,7 @@ namespace Patterns.Account
         /// <param name="username">The desired username</param>
         /// <param name="password">The password of the new user</param>
         /// <returns>The newly created PatternzUser</returns>
-        IPatternzUser CreateUser(string username, string password);
+        IPatternzUser CreateUser(string username, string password, string? displayName, string? pictureUrl, Permission permissions);
 
         /// <summary>
         /// Updates an existing PatternzUser. Password information must match

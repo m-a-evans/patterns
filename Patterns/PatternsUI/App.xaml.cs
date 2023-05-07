@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Patterns;
 using System.Windows;
 
 namespace PatternsUI
@@ -13,5 +8,9 @@ namespace PatternsUI
     /// </summary>
     public partial class App : Application
     {
+        public App()
+        {
+            Coordinator.Instance.Configure(PatternsUI.Properties.Settings.Default);
+        }
     }
 }

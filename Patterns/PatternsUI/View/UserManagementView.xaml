@@ -13,7 +13,7 @@
         <viewmodel:UserManagementViewModel x:Key="ViewModel"/>
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:InverseBoolToVisiblityConverter x:Key="InverseBoolToVisibilityConverter"/>
-
+        <converters:InverseBooleanConverter x:Key="InverseBoolConverter"/>
         <DataTemplate x:Key="cellTemplateUsername" >
             <Border>
                 <Border.InputBindings>
@@ -90,6 +90,7 @@
                                 Height="30" 
                                 Width="100" 
                                 HorizontalAlignment="Left"
+                                Click="AddButton_Click"
                                 Command="{Binding AddUserCommand}"/>
                     </StackPanel>
                     <StackPanel Margin="50,0">
@@ -126,6 +127,7 @@
                              Width="240" 
                              Height="25" 
                              Grid.Column="1" 
+                             IsVisibleChanged="UsernameTextBox_IsVisibleChanged"
                              Visibility="{Binding IsAddingUser, Converter={StaticResource BoolToVisibilityConverter}}"/>
                     <TextBlock Text="{Binding Username, FallbackValue=Username}" 
                                HorizontalAlignment="Center" 
@@ -158,7 +160,11 @@
                         <RowDefinition/>
                     </Grid.RowDefinitions>
                     <Label Content="Permissions" Margin="25,-10,7,0"/>
-                    <ListView x:Name="PermissionsListView"  Width="240" ItemsSource="{Binding UserPermissions}" Grid.Row="1" IsEnabled="{Binding IsUserAdmin}">
+                    <ListView x:Name="PermissionsListView"  
+                              Width="240" 
+                              ItemsSource="{Binding UserPermissions}" 
+                              Grid.Row="1" 
+                              IsEnabled="{Binding IsUserAdmin, Converter={StaticResource InverseBoolConverter}}">
                         <ListView.View>
                             <GridView AllowsColumnReorder="False" ColumnHeaderToolTip="User Information" >
                                 <GridViewColumn CellTemplate="{StaticResource cellTemplatePermissionName}" Header="Permission" Width="150" />
@@ -166,7 +172,12 @@
                             </GridView>
                         </ListView.View>
                     </ListView>
-                    <CheckBox x:Name="UseAdminPic" IsChecked="{Binding IsUserAdmin}" Content="Administrator" Margin="30,0" Grid.Row="2"/>
+                    <CheckBox x:Name="UseAdminPic" 
+                              IsChecked="{Binding IsUserAdmin}" 
+                              Content="Administrator" 
+                              Command="{Binding SelectIsAdminCommand}" CommandParameter="{Binding}"
+                              Margin="30,0" 
+                              Grid.Row="2"/>
                 </Grid>
                 <Grid Grid.Row="4" Margin="0,-20" Visibility="{Binding IsAddingOrEditingUser, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Grid.ColumnDefinitions>
@@ -177,7 +188,7 @@
                             x:Name="SaveButton" 
                             Height="30" 
                             Width="100" 
-                            Click="SaveButton_Click" />
+                            Command="{Binding SaveCommand}" />
                     <Button Content="Cancel" 
                             x:Name="CancelButton" 
                             Height="30" 

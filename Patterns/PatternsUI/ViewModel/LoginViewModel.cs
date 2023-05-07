@@ -1,5 +1,6 @@
 ﻿using Patterns;
 using PatternsUI.MVVM;
+using PatternsUI.MVVM.Messages;
 using PatternsUI.View;
 
 namespace PatternsUI.ViewModel
@@ -11,8 +12,10 @@ namespace PatternsUI.ViewModel
     {
         #region Fields
 
+        private const string InvalidCredentialsMessage = "Username or password not recognized.";
         private string _username;
         private bool _isError = false;
+        private string _message = InvalidCredentialsMessage;
 
         #endregion
 
@@ -43,6 +46,19 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        public string MessageForUser
+        {
+            get => _message;
+            set
+            {
+                if (_message != value)
+                {
+                    _message = value;
+                    NotifyPropertyChanged();
+                }
+            }
+        }
+
         /// <summary>
         /// Command to submit username and password
         /// </summary>
@@ -57,21 +73,60 @@ namespace PatternsUI.ViewModel
             SubmitCommand = new RelayCommand(SubmitUsernameAndPassword);
         }
 
+        public override void OnLoaded()
+        {
+            Messenger.Register<LogoutMessage>(this, OnLogoutMessage);
+        }
+
+        public override void OnUnloaded()
+        {
+            Messenger.UnregisterAll(this);
+        }
+
         /// <summary>
         /// Submits the entered username with the provided password. If the credentials are accepted,
         /// this method will navigate to the next view.
         /// </summary>
         /// <param name="password">The password to submit along with the username</param>
-        public void SubmitUsernameAndPassword(object? password)
+        public void SubmitUsernameAndPassword(object? _)
         {
             IsError = false;
-            if (password is string pw && Coordinator.Instance.UserManager.PerformLogin(_username, pw))
+            Messenger.Send(new RetrievePasswordMessage((password) =>
             {
-                Navigate(typeof(DataRecordsView));
+                var retVal = false;
+                if (password is string pw && Coordinator.Instance.UserManager.PerformLogin(_username, pw))
+                {
+                    Navigate<DataRecordsView>();
+                    retVal = true;
+                }
+                else
+                {
+                    IsError = true;
+                    MessageForUser = InvalidCredentialsMessage;
+                }
+                return retVal;
+            }));
+        }
+
+        public override void ApplyContext(object? context = null)
+        {
+            if (context is string message)
+            {
+                MessageForUser = message;
+                IsError = true;
             }
-            else
+        }
+
+        /// <summary>
+        /// Displays the reason for logout in the error text
+        /// </summary>
+        /// <param name="message"></param>
+        private void OnLogoutMessage(IMessage message)
+        {
+            if (message is LogoutMessage logoutMessage)
             {
                 IsError = true;
+                MessageForUser = logoutMessage.Message;
             }
         }
 

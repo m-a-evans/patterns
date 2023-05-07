@@ -18,6 +18,7 @@
     </Window.Resources>
     
     <Grid DataContext="{StaticResource ViewModel}" >
+        <Grid x:Name="FocusSink" Focusable="True"/>
         <!-- Page Content -->
         <Grid x:Name="ContentViewGrid" MouseDown="ContentViewGrid_MouseDown">
             <view:PatternzView Content="{Binding CurrentPage}"/>

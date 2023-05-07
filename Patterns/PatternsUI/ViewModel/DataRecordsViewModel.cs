@@ -55,7 +55,7 @@ namespace PatternsUI.ViewModel
 
         private void NavigateToUserManagement(object? _)
         {
-            Action navAction = () => Navigate(typeof(UserManagementView));
+            Action navAction = () => Navigate<UserManagementView>();
             if (IsDirty) 
             {
                 RequestExit(navAction, "Are you sure you want to leave?");

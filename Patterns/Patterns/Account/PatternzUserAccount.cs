@@ -84,6 +84,7 @@ namespace Patterns.Account
 
                 result.PasswordHash = hashed;
             }
+            _users[user.Username] = result;
             
             return result;
         }
@@ -112,8 +113,11 @@ namespace Patterns.Account
         /// </summary>
         /// <param name="username">The desired username</param>
         /// <param name="password">The password of the new user</param>
+        /// <param name="displayName">Optional. Display name of the user</param>
+        /// <param name="pictureUrl">Optional. The profile picture url of the user</param>
+        /// <param name="permissions">What permissions the user has</param>
         /// <returns>The newly created PatternzUser</returns>
-        public IPatternzUser CreateUser(string username, string password)
+        public IPatternzUser CreateUser(string username, string password, string? displayName, string? pictureUrl, Permission permissions = Permission.None)
         {
             Guard.IsNotNullOrWhiteSpace(username, nameof(username));
             Guard.IsNotNullOrWhiteSpace(password, nameof(password));
@@ -125,7 +129,7 @@ namespace Patterns.Account
             Pbkdf2DataHasher hasher = new();
 
             string hashed = hasher.HashString(password);
-            IPatternzUser result = new PatternzUser(username, hashed);
+            IPatternzUser result = new PatternzUser(username, hashed, permissions, displayName, pictureUrl);
             _users.Add(username, result);
             return result;
         }
@@ -138,7 +142,7 @@ namespace Patterns.Account
         public async Task<bool> TryReadUsersFromStoreAsync(string? pathToStore = null)
         {
             bool result = false;
-            pathToStore ??= PathToStore + StoreName;
+            pathToStore ??= _storeFullName;
 
             try
             {
@@ -172,7 +176,7 @@ namespace Patterns.Account
         /// <returns>True if the write operation succeeds</returns>
         public async Task<bool> TryWriteUsersToStoreAsync(string? pathToStore = null)
         {
-            pathToStore ??= PathToStore + StoreName;
+            pathToStore ??= _storeFullName;
 
             try
             {
@@ -215,10 +219,7 @@ namespace Patterns.Account
             List<IPatternzUser> result = new();
             foreach (IPatternzUser user in _users.Values) 
             {
-                result.Add(new PatternzUser(user.Username, user.PasswordHash, user.DisplayName, user.Permissions)
-                {
-                    PictureUrl = user.PictureUrl
-                });
+                result.Add(new PatternzUser(user.Username, user.PasswordHash, user.Permissions, user.DisplayName, user.PictureUrl));
             }
             return result;
         }

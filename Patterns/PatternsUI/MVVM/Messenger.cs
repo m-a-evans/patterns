@@ -20,21 +20,20 @@ namespace PatternsUI.MVVM
         public static void Send(IMessage message)
         {
             string messageType = message.GetType().Name;
-            ConcurrentDictionary<Guid, MessageRecipient>? listeners = null;
+            ConcurrentDictionary<Guid, MessageRecipient>? listeners;
 
             // See if anyone is listening for this kind of message
             if (_listeners.TryGetValue(messageType, out listeners))
             {
                 List<Guid> toRemove = new();
-                Action<IMessage>? sendMessage;
 
                 // For everyone who signed up for this message, send it to 'em
                 foreach(MessageRecipient listener in listeners.Values) 
                 {
-                    sendMessage = null;
-                    if (listener.Target.TryGetTarget(out sendMessage))
+                    // If our recipient is still around (not garbage collected), send the message
+                    if (listener.Recipient.TryGetTarget(out _))
                     {
-                        sendMessage(message);
+                        listener.Target(message);
                     }
                     else
                     {
@@ -45,7 +44,7 @@ namespace PatternsUI.MVVM
                 // If we ran into nulls, clean out our dictionary
                 foreach (Guid id in toRemove)
                 {
-                    ConcurrentDictionary<Guid, MessageRecipient>? listenersToRemove = null;
+                    ConcurrentDictionary<Guid, MessageRecipient>? listenersToRemove;
                     if (_listeners.TryGetValue(messageType, out listenersToRemove))
                     {
                         listenersToRemove.Remove(id, out _);

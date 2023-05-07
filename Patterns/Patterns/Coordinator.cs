@@ -1,6 +1,8 @@
 ﻿using Patterns.Account;
 using Patterns.Data.Model;
 using Patterns.IO;
+using System.Configuration;
+using Windows.ApplicationModel.Appointments;
 
 namespace Patterns
 {
@@ -9,7 +11,11 @@ namespace Patterns
     /// </summary>
     public class Coordinator : ICoordinator
     {
-        private static Coordinator _instance;
+        private static Coordinator? _instance;
+        private const string UserRecordLocationName = "UserRecordLocation";
+        private string? _userRecordLocation;
+        private UserManager _userManager;
+
         /// <summary>
         /// Gets the Singleton instance
         /// </summary>
@@ -22,13 +28,23 @@ namespace Patterns
         }
         private Coordinator()
         {
-            UserManager = new UserManager();
+
         }
 
         /// <summary>
         /// Access to information about the current user, and login/logout functionality
         /// </summary>
-        public IUserManager UserManager { get; private set; }
+        public IUserManager UserManager
+        {
+            get
+            {
+                if (_userManager == null)
+                {
+                    _userManager = new UserManager(_userRecordLocation);
+                }
+                return _userManager;
+            }
+        }
 
         /// <summary>
         /// Gets a data record manager of the specified format, gated by the current user's permissions
@@ -46,7 +62,21 @@ namespace Patterns
         /// <returns></returns>
         public IUserAccount GetUserAccountManager()
         {
-            return new AccountProxy(UserManager.CurrentUser);
+            return new AccountProxy(UserManager.CurrentUser, _userRecordLocation);
+        }
+
+        /// <summary>
+        /// Configures the components of the Coordinator with application settings
+        /// </summary>
+        /// <param name="settings"></param>
+        public void Configure(ApplicationSettingsBase settings)
+        {
+            string? location = settings.Properties[UserRecordLocationName].DefaultValue as string;
+            if (_userRecordLocation != location || UserManager == null)
+            {
+                _userRecordLocation = location;
+                _userManager = new UserManager(_userRecordLocation);
+            }
         }
     }
 }

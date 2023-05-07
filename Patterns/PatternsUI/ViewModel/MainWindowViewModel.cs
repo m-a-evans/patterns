@@ -6,6 +6,7 @@ using PatternsUI.MVVM;
 using PatternsUI.MVVM.Messages;
 using PatternsUI.View;
 using System;
+using System.CodeDom;
 using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
@@ -55,7 +56,7 @@ namespace PatternsUI.ViewModel
 
         public MainWindowViewModel()
         {
-            LogoutCommand = new RelayCommand(Logout, (_) => 
+            LogoutCommand = new RelayCommand(RequestLogout, (_) => 
                 !Coordinator.Instance.UserManager.CurrentUser.IsAnyUser);
             ExitCommand = new RelayCommand(QuitApplication);
             AboutCommand = new RelayCommand(About);
@@ -63,9 +64,16 @@ namespace PatternsUI.ViewModel
 
             Coordinator.Instance.UserManager.CurrentUserChanged += OnCurrentUserChanged;
 
+            Messenger.Register<LogoutMessage>(this, OnLogoutMessage);
+
             NavigateToView(typeof(Login));
         }
 
+        /// <summary>
+        /// Updates relevant visual elements when the current user changes
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public void OnCurrentUserChanged(object? sender, CurrentUserChangedEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.NewUser.PictureUrl))
@@ -82,12 +90,15 @@ namespace PatternsUI.ViewModel
             NotifyPropertyChanged(nameof(CurrentUserPicture));
         }
 
-        public void Logout(object? _)
+        /// <summary>
+        /// Requests a logout of the current user.
+        /// </summary>
+        /// <param name="_"></param>
+        public void RequestLogout(object? _)
         {
             Action logout = () =>
             {
-                Coordinator.Instance.UserManager.PerformLogout();
-                NavigateToView(typeof(Login));
+                Messenger.Send(new LogoutMessage());
             };
 
             if (CurrentPage.ViewModel != null)
@@ -104,15 +115,36 @@ namespace PatternsUI.ViewModel
 
         #region Private Methods
 
-        private void NavigateToView(Type viewType)
+        /// <summary>
+        /// Performs a logout in the user manager, and resets the UI to the login page
+        /// </summary>
+        /// <param name="message"></param>
+        private void OnLogoutMessage(IMessage message)
+        {
+            Coordinator.Instance.UserManager.PerformLogout();
+            Messenger.Send(new ClearUIMessage());
+            Messenger.Send(new ClearFocusMessage());
+            NavigateToView(typeof(Login), "You have been logged out");
+        }
+
+        /// <summary>
+        /// Creates and navigates to a new instance of the destination view, 
+        /// calling the current view's view model's OnUnloaded in the process
+        /// </summary>
+        /// <param name="viewType">The type of view to navigate to</param>
+        private void NavigateToView(Type viewType, object? context = null)
         {
             PatternzView? nextView = Activator.CreateInstance(viewType) as PatternzView;
             if (nextView != null)
             {
                 CurrentPage = nextView;
-                if (CurrentPage.ViewModel != null)
+                if (CurrentPage.ViewModel is INavigator navigator)
                 {
-                    CurrentPage.ViewModel.Navigate = NavigateToView;
+                    navigator.NavAction = NavigateToView;
+                }
+                if (CurrentPage.ViewModel is IViewModel viewModel) 
+                {
+                    viewModel.ApplyContext(context);
                 }
                 PrepareMenuItems();
             }
@@ -122,9 +154,17 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Requests to quit the application
+        /// </summary>
+        /// <param name="_"></param>
         private void QuitApplication(object? _)
         {
-            Action exit = () => Application.Current.Shutdown();
+            Action exit = () =>
+            {
+                CurrentPage.ViewModel?.OnUnloaded();
+                Application.Current.Shutdown();
+            };
             if (CurrentPage.ViewModel != null)
             {
                 CurrentPage.ViewModel.RequestExit(exit);
@@ -135,6 +175,10 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Displays the About dialog for this application
+        /// </summary>
+        /// <param name="_"></param>
         private void About(object? _)
         {
             ShowPopupMessage aboutMsg = new("About Patternz", "Patternz is an educational application " +
@@ -143,30 +187,41 @@ namespace PatternsUI.ViewModel
             Messenger.Send(aboutMsg);
         }
 
+        /// <summary>
+        /// Gets any menu items from the CurrentPage, assigning to the appropriate menu bucket.
+        /// This method also adds a few menu items related to the overall application
+        /// </summary>
         private void PrepareMenuItems()
         {
-            FileMenuItems = CurrentPage.ViewModel?.FileMenuItems ?? new ObservableCollection<MenuItem>();
+            if (CurrentPage.ViewModel is ViewModelBase viewModel)
+            {
+                FileMenuItems = viewModel.FileMenuItems ?? new ObservableCollection<MenuItem>();
+                EditMenuItems = viewModel.EditMenuItems ?? new ObservableCollection<MenuItem>();
+                ViewMenuItems = viewModel.ViewMenuItems ?? new ObservableCollection<MenuItem>();
+                HelpMenuItems = viewModel.HelpMenuItems ?? new ObservableCollection<MenuItem>();
+            }
+
             FileMenuItems.Add(new MenuItem() { Header = "Exit", Command = ExitCommand });
             AttachMenuItemNames(FileMenuItems);
             NotifyPropertyChanged(nameof(FileMenuItems));
 
-            EditMenuItems = CurrentPage.ViewModel?.EditMenuItems ?? new ObservableCollection<MenuItem>();
             AttachMenuItemNames(EditMenuItems);
             NotifyPropertyChanged(nameof(EditMenuItems));
 
-            ViewMenuItems = CurrentPage.ViewModel?.ViewMenuItems ?? new ObservableCollection<MenuItem>();
             AttachMenuItemNames(ViewMenuItems);
             NotifyPropertyChanged(nameof(ViewMenuItems));
 
-            HelpMenuItems = CurrentPage.ViewModel?.HelpMenuItems ?? new ObservableCollection<MenuItem>();
             HelpMenuItems.Add(new MenuItem() { Header = "About Application", Command = AboutCommand });
             AttachMenuItemNames(HelpMenuItems);
             NotifyPropertyChanged(nameof(HelpMenuItems));
 
             NotifyPropertyChanged(nameof(IsMenuVisible));
-            
         }
 
+        /// <summary>
+        /// Generates names for each menu item
+        /// </summary>
+        /// <param name="menuItems"></param>
         private void AttachMenuItemNames(ObservableCollection<MenuItem> menuItems)
         {
             foreach (MenuItem menuItem in menuItems) 

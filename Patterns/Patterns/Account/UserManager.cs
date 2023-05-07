@@ -10,11 +10,14 @@ namespace Patterns.Account
     /// </summary>
     internal class UserManager : IUserManager
     {
-        private IUserAccount _userManager = new AccountProxy(PatternzUser.AnyUser);
+        private IUserAccount _userManager;
 
         private IPatternzUser _currentUser;
 
-        private Task _loadUsersFromStore;
+        private Task? _loadUsersFromStore;
+
+        private string? _pathToStore;
+        private bool _isStale;
 
         public event EventHandler<CurrentUserChangedEventArgs>? CurrentUserChanged;
 
@@ -39,10 +42,12 @@ namespace Patterns.Account
         /// <summary>
         /// Constructor, sets current user to AnyUser
         /// </summary>
-        public UserManager()
+        public UserManager(string? pathToStore = null)
         {
             _currentUser = PatternzUser.AnyUser;
-            _loadUsersFromStore = _userManager.TryReadUsersFromStoreAsync();
+            _pathToStore = pathToStore;
+            _userManager = new AccountProxy(PatternzUser.AnyUser, pathToStore);
+            StartReadingUserStore();
         }
 
         /// <summary>
@@ -58,8 +63,11 @@ namespace Patterns.Account
         /// <returns>True if the login succeeded</returns>
         public bool PerformLogin(string username, string password)
         {
-            if (!_loadUsersFromStore.IsCompleted)
-                _loadUsersFromStore.Wait();
+            if (_isStale)
+            {
+                _loadUsersFromStore?.Wait();
+                _isStale = false;
+            }
             IPatternzUser? user;
             if (_userManager.TryGetUser(username, out user))
             {
@@ -71,6 +79,7 @@ namespace Patterns.Account
                 if (hasher.ValidateHash(password, user!.PasswordHash))
                 {
                     CurrentUser = user;
+                    _userManager = new AccountProxy(CurrentUser, _pathToStore);
                     return true;
                 }
             }
@@ -84,6 +93,14 @@ namespace Patterns.Account
         public void PerformLogout()
         {
             CurrentUser = PatternzUser.AnyUser;
+            _userManager = new AccountProxy(PatternzUser.AnyUser, _pathToStore);
+            StartReadingUserStore();
+        }
+
+        private void StartReadingUserStore()
+        {
+            _isStale = true;
+            _loadUsersFromStore = _userManager.TryReadUsersFromStoreAsync(_pathToStore);
         }
     }
 }

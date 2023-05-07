@@ -13,7 +13,7 @@
         /// <summary>
         /// Gets the "AnyUser" object
         /// </summary>
-        public static IPatternzUser AnyUser { get; } = new PatternzUser(isAnyUser: true, username: string.Empty, passwordHash: string.Empty);
+        public static IPatternzUser AnyUser { get; } = new PatternzUser();
 
         /// <summary>
         /// Instantiates a new instance of PatternzUser
@@ -22,13 +22,13 @@
         /// <param name="passwordHash">Hash of the password of the user</param>
         /// <param name="displayName">Optional. The in-app displayed name</param>
         /// <param name="permissions">Optional. What permissions this user has. Defaults to None</param>
-        public PatternzUser(string username, string passwordHash, string? displayName = null, Permission permissions = Permission.None)
+        public PatternzUser(string username, string passwordHash, Permission permissions = Permission.None, string? displayName = null, string? pictureUrl = null)
         {
             DisplayName = displayName ?? string.Empty;
             PasswordHash = passwordHash;
             Username = username;
             Permissions = permissions;
-            PictureUrl = string.Empty;
+            PictureUrl = pictureUrl ?? string.Empty;
         }
 
         /// <summary>
@@ -39,10 +39,10 @@
         /// <param name="passwordHash"></param>
         /// <param name="displayName"></param>
         /// <param name="permissions"></param>
-        private PatternzUser(bool isAnyUser, string username, string passwordHash, string? displayName = null, Permission permissions = Permission.None)
-            : this(username, passwordHash, displayName, permissions)
+        private PatternzUser()
+            : this(username: "AnyUser", passwordHash: string.Empty, permissions: Permission.None, displayName: string.Empty, pictureUrl: string.Empty)
         {
-            IsAnyUser = isAnyUser;
+            IsAnyUser = true;
         }
 
         /// <summary>
