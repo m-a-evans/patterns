@@ -44,7 +44,7 @@ namespace Utility
             }
             else
             {
-                Console.WriteLine("user written!");
+                Console.WriteLine($"User written to {Path.GetFullPath(PathToStore)}!");
             }
 
             Console.WriteLine("Done");

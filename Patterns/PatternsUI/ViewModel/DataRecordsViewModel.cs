@@ -18,8 +18,16 @@ namespace PatternsUI.ViewModel
         #region Properties
 
         public bool IsDirty = false;
+
         public RelayCommand NavigateToUserManagementCommand { get; private set; }
         public RelayCommand ShowAboutCommand { get; private set; }
+        public RelayCommand NewCommand { get; private set; }
+        public RelayCommand OpenCommand { get; private set; }
+        public RelayCommand CloseCommand { get; private set; }
+        public RelayCommand SaveCommand { get; private set; }
+        public RelayCommand UndoCommand { get; private set; }
+        public RelayCommand RedoCommand { get; private set; }
+        public RelayCommand RenameCommand { get; private set; }
 
         #endregion
 
@@ -28,6 +36,13 @@ namespace PatternsUI.ViewModel
         {
             ShowAboutCommand = new RelayCommand(ShowAbout);
             NavigateToUserManagementCommand = new RelayCommand(NavigateToUserManagement);
+            NewCommand = new RelayCommand(NewFile);
+            OpenCommand = new RelayCommand(OpenFile);
+            SaveCommand = new RelayCommand(SaveData);
+            CloseCommand = new RelayCommand(CloseCurrentFile);
+            UndoCommand = new RelayCommand(Undo);
+            RedoCommand = new RelayCommand(Redo);
+            RenameCommand = new RelayCommand(RenameFile);
 
             PrepareMenuItems();
         }
@@ -53,6 +68,41 @@ namespace PatternsUI.ViewModel
 
         #region Private Methods
 
+        private void SaveData(object? _)
+        {
+
+        }
+
+        private void NewFile(object? _)
+        {
+
+        }
+
+        private void OpenFile(object? _)
+        {
+
+        }
+
+        private void CloseCurrentFile(object? _)
+        {
+
+        }
+
+        private void Redo(object? _)
+        {
+
+        }
+
+        private void Undo(object? _)
+        {
+
+        }
+
+        private void RenameFile(object? _)
+        {
+
+        }
+
         private void NavigateToUserManagement(object? _)
         {
             Action navAction = () => Navigate<UserManagementView>();
@@ -68,6 +118,19 @@ namespace PatternsUI.ViewModel
 
         private void PrepareMenuItems()
         {
+            FileMenuItems = new()
+            {
+                new MenuItem() { Header = "New", Command = NewCommand },
+                new MenuItem() { Header = "Open", Command = OpenCommand },
+                new MenuItem() { Header = "Save", Command = SaveCommand },
+                new MenuItem() { Header = "Close", Command = CloseCommand },
+            };
+            EditMenuItems = new()
+            {
+                new MenuItem() { Header = "Undo", Command = UndoCommand },
+                new MenuItem() { Header = "Redo", Command = RedoCommand },
+                new MenuItem() { Header = "Rename", Command = RenameCommand },
+            };
             HelpMenuItems = new()
             {
                 new MenuItem() { Header = "About This Page", Command = ShowAboutCommand }

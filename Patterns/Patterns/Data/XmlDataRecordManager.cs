@@ -1,7 +1,9 @@
 ﻿using Patterns.Data.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace Patterns.IO
@@ -14,12 +16,12 @@ namespace Patterns.IO
         /// <summary>
         /// Attempts to parse a collection of data records by xml file name
         /// </summary>
-        /// <param name="xmlFileName">The name of the data records to parse</param>
-        /// <param name="dataRecords">The resultant list of records, if parsed successfully</param>
+        /// <param name="xmlFileName">The name of the DataFile to parse</param>
+        /// <param name="dataFile">The resultant DataFile, if parsed correctly</param>
         /// <returns>True if the records were able to be parsed</returns>
-        public bool TryParseRecords(string xmlFileName, out List<DataRecord>? userRecords)
+        public bool TryParseRecords(string xmlFileName, out DataFile? dataFile)
         {
-            userRecords = new List<DataRecord>();
+            dataFile = null;
             if (!File.Exists(xmlFileName))
             {
                 return false;
@@ -28,10 +30,25 @@ namespace Patterns.IO
             try
             {
                 XmlSerializer serializer = new(typeof(List<DataRecord>));
-                userRecords = serializer.Deserialize(File.Open(xmlFileName, FileMode.Open)) as List<DataRecord>;
+                List<DataRecord>? dataRecordsList = serializer.Deserialize(File.Open(xmlFileName, FileMode.Open)) as List<DataRecord>;
+
+                dataFile = new DataFile()
+                {
+                    FileName = xmlFileName,
+                    Format = DataRecordFormat.Xml,
+                    Path = Path.GetDirectoryName(xmlFileName) ?? string.Empty
+                };
+                if (dataRecordsList != null)
+                {
+                    foreach (DataRecord record in dataRecordsList)
+                    {
+                        dataFile.DataRecords.Add(record.CreatedDate, record);
+                    }
+                }
             }
             catch (Exception ex)
             {
+                Debug.WriteLine(ex);
                 return false;
             }
 
@@ -41,19 +58,19 @@ namespace Patterns.IO
         /// <summary>
         /// Writes a collection of data records to an XML file
         /// </summary>
-        /// <param name="collectionName">The name of the collection to write</param>
-        /// <param name="dataRecords">The collection to write</param>
+        /// <param name="dataFile">The DataFile to write. It will be written to the FileName location</param>
         /// <returns>The number of bytes written</returns>
-        public long WriteDataRecords(string collectionName, List<DataRecord> userRecords)
+        public long WriteDataRecords(DataFile dataFile)
         {
             XmlSerializer serializer = new(typeof(List<DataRecord>));
-            StreamWriter writer = new StreamWriter(collectionName);
 
-            serializer.Serialize(writer, userRecords);
+            StreamWriter writer = new StreamWriter(dataFile.FileName);
+
+            serializer.Serialize(writer, dataFile.DataRecords.Values.ToList());
 
             writer.Close();
 
-            FileInfo fileJustWritten = new FileInfo(collectionName);
+            FileInfo fileJustWritten = new FileInfo(dataFile.FileName);
             return fileJustWritten.Length;
         }
     }

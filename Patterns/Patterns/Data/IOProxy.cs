@@ -2,7 +2,6 @@
 using Patterns.Account.Model;
 using Patterns.Data.Model;
 using Patterns.IO;
-using System.Collections.Generic;
 
 namespace Patterns.Data
 {
@@ -29,29 +28,28 @@ namespace Patterns.Data
         /// Attempts to parse a collection of data records by name
         /// </summary>
         /// <param name="recordName">The name of the data records to parse</param>
-        /// <param name="dataRecords">The resultant list of records, if parsed successfully</param>
+        /// <param name="dataFile">The resultant DataFile, if parsed successfully</param>
         /// <returns>True if the records were able to be parsed</returns>
-        public bool TryParseRecords(string recordName, out List<DataRecord>? userRecord)
+        public bool TryParseRecords(string recordName, out DataFile? dataFile)
         {
+            dataFile = null;
             if ((_user.Permissions & Permission.ReadAccess) == Permission.ReadAccess)
             {
-                return _userManager.TryParseRecords(recordName, out userRecord);
+                return _userManager.TryParseRecords(recordName, out dataFile);
             }
-            userRecord = new List<DataRecord>(); ;
             return ThrowHelper.ThrowUnauthorizedAccessException<bool>();
         }
 
         /// <summary>
         /// Writes a collection of data records to some storage medium
         /// </summary>
-        /// <param name="collectionName">The name of the collection to write</param>
-        /// <param name="dataRecords">The collection to write</param>
+        /// <param name="dataFile">The DataFile to write to the store</param>
         /// <returns>The number of bytes written</returns>
-        public long WriteDataRecords(string collectionName, List<DataRecord> userRecord)
+        public long WriteDataRecords(DataFile dataFile)
         {
             if ((_user.Permissions & Permission.WriteAccess) == Permission.WriteAccess)
             {
-                return _userManager.WriteDataRecords(collectionName, userRecord);
+                return _userManager.WriteDataRecords(dataFile);
             }
             return ThrowHelper.ThrowUnauthorizedAccessException<long>();
         }

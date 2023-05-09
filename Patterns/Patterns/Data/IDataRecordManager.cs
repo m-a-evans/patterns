@@ -11,17 +11,16 @@ namespace Patterns.IO
         /// <summary>
         /// Writes a collection of data records to some storage medium
         /// </summary>
-        /// <param name="collectionName">The name of the collection to write</param>
-        /// <param name="dataRecords">The collection to write</param>
+        /// <param name="file">The file containing the records to write</param>
         /// <returns>The number of bytes written</returns>
-        public long WriteDataRecords(string collectionName, List<DataRecord> dataRecords);
+        public long WriteDataRecords(DataFile file);
 
         /// <summary>
         /// Attempts to parse a collection of data records by name
         /// </summary>
         /// <param name="recordName">The name of the data records to parse</param>
-        /// <param name="dataRecords">The resultant list of records, if parsed successfully</param>
+        /// <param name="file">The resultant file containing the records, if parsed successfully</param>
         /// <returns>True if the records were able to be parsed</returns>
-        public bool TryParseRecords(string recordName, out List<DataRecord>? dataRecords);
+        public bool TryParseRecords(string recordName, out DataFile? file);
     }
 }
