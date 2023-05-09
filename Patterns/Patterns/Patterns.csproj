@@ -19,8 +19,4 @@
     <PackageReference Include="System.Drawing.Common" Version="7.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Data\Command\" />
-  </ItemGroup>
-
 </Project>
