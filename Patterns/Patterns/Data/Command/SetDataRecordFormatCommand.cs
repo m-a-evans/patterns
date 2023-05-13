@@ -1,31 +1,36 @@
 ﻿using Patterns.Data.Command.Parameter;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Patterns.Data.Model;
 
 namespace Patterns.Data.Command
 {
-    internal class SetDataRecordFormatCommand : IDataCommand
+    public class SetDataRecordFormatCommand : DataCommand
     {
-        public string CommandName => "Set Data Record Format";
+        private DataRecordFormat _previousState;
+        private SetDataRecordFormatParam _param;
 
-        public DataCommandId Id => DataCommandId.SetDataRecordFormat;
+        public override string CommandName => "Set Data Record Format";
 
-        public SetDataRecordFormatCommand(SetDataRecordFormatParam param)
+        public override DataCommandId Id => DataCommandId.SetDataRecordFormat;
+
+        public SetDataRecordFormatCommand(DataFile receiver)
         {
-
+            DataFile = receiver;
         }
 
-        public void Execute()
+        public override void Execute(IDataCommandParam? param = null)
         {
-            throw new NotImplementedException();
+            param ??= _param;
+            if (param is SetDataRecordFormatParam formatParam)
+            {
+                _previousState = DataFile.Format;
+                DataFile.Format = formatParam.Format;
+                _param = formatParam;
+            }
         }
 
-        public void Unexecute()
+        public override void Unexecute()
         {
-            throw new NotImplementedException();
+            DataFile.Format = _previousState;
         }
     }
 }

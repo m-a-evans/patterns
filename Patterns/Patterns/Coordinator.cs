@@ -78,5 +78,15 @@ namespace Patterns
                 _userManager = new UserManager(_userRecordLocation);
             }
         }
+
+        /// <summary>
+        /// Gets a data record manager of the format inferred from the filename, gated by the current user's permissions
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        public IDataRecordManager GetDataRecordManager(string fileName)
+        {
+            return DataRecordManagerFactory.GetUserRecordManager(UserManager.CurrentUser, fileName);
+        }
     }
 }

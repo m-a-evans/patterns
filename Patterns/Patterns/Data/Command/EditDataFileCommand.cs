@@ -1,4 +1,5 @@
 ﻿using Patterns.Data.Command.Parameter;
+using Patterns.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,28 +8,34 @@ using System.Threading.Tasks;
 
 namespace Patterns.Data.Command
 {
-    internal class EditDataFileCommand : IDataCommand
+    public class EditDataFileCommand : DataCommand
     {
-        private DateTime _previousModified;
-        private string _previousFileName;
+        private DataFile _previousState;
+        private EditDataFileParam _param;
 
-        public string CommandName => throw new NotImplementedException();
+        public override string CommandName => throw new NotImplementedException();
 
-        public DataCommandId Id => throw new NotImplementedException();
+        public override DataCommandId Id => throw new NotImplementedException();
 
-        public EditDataFileCommand(EditDataFileParam param)
+        public EditDataFileCommand(DataFile receiver)
         {
-
+            DataFile = receiver;
         }
 
-        public void Execute()
+        public override void Execute(IDataCommandParam? param = null)
         {
-            throw new NotImplementedException();
+            param ??= _param;
+            if (param is EditDataFileParam editDataParam)
+            {
+                _previousState = DataFile.DeepCopy();
+                DataFile = editDataParam.DataFile;
+                _param = editDataParam;
+            }
         }
 
-        public void Unexecute()
+        public override void Unexecute()
         {
-            throw new NotImplementedException();
+            DataFile = _previousState;
         }
     }
 }

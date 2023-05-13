@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Patterns.Data.Command
 {
-    internal enum DataCommandId
+    public enum DataCommandId
     {
         CreateDataRecord,
         RemoveDataRecord,

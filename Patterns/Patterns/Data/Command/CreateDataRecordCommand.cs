@@ -1,32 +1,38 @@
 ﻿using Patterns.Data.Command.Parameter;
+using Patterns.Data.Model;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Navigation;
 
 namespace Patterns.Data.Command
 {
-    internal class CreateDataRecordCommand : IDataCommand
+    public class CreateDataRecordCommand : DataCommand
     {
-        public string CommandName => nameof(CreateDataRecordCommand);
+        private DateTime _previousState;
 
-        public DataCommandId Id => DataCommandId.CreateDataRecord;
+        private CreateDataRecordParam _param;
 
-        public CreateDataRecordCommand(CreateDataRecordParam param)
+        public override string CommandName => nameof(CreateDataRecordCommand);
+
+        public override DataCommandId Id => DataCommandId.CreateDataRecord;
+
+        public CreateDataRecordCommand(DataFile receiver)
         {
-
+            DataFile = receiver;
         }
 
-        public void Execute()
+        public override void Execute(IDataCommandParam? param = null)
         {
-            throw new NotImplementedException();
+            param ??= _param;
+            if (param is CreateDataRecordParam createDataParam)
+            {
+                DataFile.DataRecords.Add(createDataParam.DataRecord.CreatedDate, createDataParam.DataRecord);
+                _previousState = createDataParam.DataRecord.CreatedDate;
+                _param = createDataParam;
+            }
         }
 
-        public void Unexecute()
+        public override void Unexecute()
         {
-            throw new NotImplementedException();
+            DataFile.DataRecords.Remove(_previousState);
         }
     } 
 }

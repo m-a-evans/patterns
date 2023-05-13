@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Patterns.Data.Command.Parameter
 {
-    internal class RemoveDataRecordParam : IDataCommandParam
+    public class RemoveDataRecordParam : IDataCommandParam
     {
         public string Name => nameof(RemoveDataRecordParam);
 

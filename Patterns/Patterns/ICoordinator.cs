@@ -27,6 +27,13 @@ namespace Patterns
         IDataRecordManager GetDataRecordManager(DataRecordFormat dataRecordManagerType);
 
         /// <summary>
+        /// Gets a data record manager of a format inferred from the filename
+        /// </summary>
+        /// <param name="fileName">The intended file to parse</param>
+        /// <returns></returns>
+        IDataRecordManager GetDataRecordManager(string fileName);
+
+        /// <summary>
         /// Configures the components of the Coordinator with application settings
         /// </summary>
         /// <param name="settings"></param>
