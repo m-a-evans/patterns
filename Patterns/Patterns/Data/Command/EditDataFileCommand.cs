@@ -13,13 +13,14 @@ namespace Patterns.Data.Command
         private DataFile _previousState;
         private EditDataFileParam _param;
 
-        public override string CommandName => throw new NotImplementedException();
+        public override string CommandName => nameof(EditDataFileCommand);
 
-        public override DataCommandId Id => throw new NotImplementedException();
+        public override DataCommandId Id => DataCommandId.EditDataFile;
 
-        public EditDataFileCommand(DataFile receiver)
+        public EditDataFileCommand(DataFile receiver, EditDataFileParam? param = null)
         {
             DataFile = receiver;
+            Param = param;
         }
 
         public override void Execute(IDataCommandParam? param = null)

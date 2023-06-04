@@ -64,13 +64,14 @@ namespace Patterns.IO
         {
             XmlSerializer serializer = new(typeof(List<DataRecord>));
 
-            StreamWriter writer = new StreamWriter(dataFile.FileName);
+            string collectionName = dataFile.FileName.Contains(dataFile.Path) ? dataFile.FileName : dataFile.Path + "/" + dataFile.FileName;
+            StreamWriter writer = new StreamWriter(collectionName);
 
             serializer.Serialize(writer, dataFile.DataRecords.Values.ToList());
 
             writer.Close();
 
-            FileInfo fileJustWritten = new FileInfo(dataFile.FileName);
+            FileInfo fileJustWritten = new FileInfo(collectionName);
             return fileJustWritten.Length;
         }
     }

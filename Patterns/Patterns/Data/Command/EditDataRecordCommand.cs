@@ -1,40 +1,62 @@
-﻿using Patterns.Data.Command.Parameter;
+﻿using CommunityToolkit.Diagnostics;
+using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Patterns.Data.Command
 {
     public class EditDataRecordCommand : DataCommand
     {
-        private DataRecord _previousState;
-        private EditDataRecordParam _param;
-        public override string CommandName => throw new NotImplementedException();
+        private DataRecord? _previousState;
+        public override string CommandName => nameof(EditDataRecordCommand);
 
-        public override DataCommandId Id => throw new NotImplementedException();
+        public override DataCommandId Id => DataCommandId.EditDataRecord;
 
-        public EditDataRecordCommand(DataFile receiver)
+        public EditDataRecordCommand(ICollection<DataRecord> receiver, EditDataRecordParam? param = null)
         {
-            DataFile = receiver;
+            RecordCollection = receiver;
+            Param = param;
         }
 
         public override void Execute(IDataCommandParam? param = null)
         {
-            param ??= _param;
+            param ??= Param;
             if (param is EditDataRecordParam setDataParam)
+            { 
+                Param = setDataParam;
+                _previousState = ReplaceRecordInCollection(setDataParam.DataRecord);
+            }
+            else
             {
-                _previousState = DataFile.DataRecords[setDataParam.DataRecord.CreatedDate].DeepCopy();
-                DataFile.DataRecords[setDataParam.DataRecord.CreatedDate] = setDataParam.DataRecord;
-                _param = setDataParam;
+                ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(EditDataRecordParam)}");
             }
         }
 
         public override void Unexecute()
         {
-            DataFile.DataRecords[_previousState.CreatedDate] = _previousState;
+            CheckParamBeforeUnexecute();
+            _ = ReplaceRecordInCollection(_previousState!);
+        }
+
+        private DataRecord ReplaceRecordInCollection(DataRecord newRecord)
+        {
+            DataRecord? retVal = null;
+            for (int i = 0; i < RecordCollection.Count; i++)
+            {
+                DataRecord record = RecordCollection.ElementAt(i);
+                if (record.Id == newRecord.Id)
+                {
+                    retVal = RecordCollection.ElementAt(i).DeepCopy();
+                    record = newRecord;
+                    break;
+                }
+            }
+            if (retVal == null) 
+            {
+                ThrowHelper.ThrowInvalidOperationException<DataRecord>($"{nameof(DataRecord)} does not exist in collection");
+            }
+            return retVal!;
         }
     }
 }

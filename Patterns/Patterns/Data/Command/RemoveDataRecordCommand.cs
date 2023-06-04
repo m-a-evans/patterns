@@ -1,4 +1,5 @@
-﻿using Patterns.Data.Command.Parameter;
+﻿using CommunityToolkit.Diagnostics;
+using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
 using System;
 using System.Collections.Generic;
@@ -10,31 +11,34 @@ namespace Patterns.Data.Command
 {
     public class RemoveDataRecordCommand : DataCommand
     {
-        private DataRecord _previousState;
-        private RemoveDataRecordParam _param;
         public override string CommandName => nameof(RemoveDataRecordCommand);
 
         public override DataCommandId Id => DataCommandId.RemoveDataRecord;
 
-        public RemoveDataRecordCommand(DataFile receiver)
+        public RemoveDataRecordCommand(ICollection<DataRecord> receiver, RemoveDataRecordParam? param = null)
         {
-            DataFile = receiver;
+            RecordCollection = receiver;
+            Param = param;
         }
 
         public override void Execute(IDataCommandParam? param = null)
         {
-            param ??= _param;
+            param ??= Param;
             if (param is RemoveDataRecordParam removeDataParam)
             {
-                _previousState = DataFile.DataRecords[removeDataParam.DataRecord.CreatedDate].DeepCopy();
-                DataFile.DataRecords.Remove(removeDataParam.DataRecord.CreatedDate);
-                _param = removeDataParam;
+                Param = removeDataParam;
+                RecordCollection.Remove(removeDataParam.DataRecord);
+            }
+            else
+            {
+                ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(RemoveDataRecordParam)}");
             }
         }
 
         public override void Unexecute()
         {
-            DataFile.DataRecords.Add(_previousState.CreatedDate, _previousState);
+            CheckParamBeforeUnexecute();
+            RecordCollection.Add(((RemoveDataRecordParam)Param).DataRecord);
         }
     }
 }

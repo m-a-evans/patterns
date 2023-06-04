@@ -15,6 +15,7 @@
         <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
         <converters:InverseBoolToVisiblityConverter x:Key="InverseBoolToVisibilityConverter"/>
         <converters:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <converters:DateTextConverter x:Key="DateTextConverter" />
     </view:PatternzView.Resources>
 
     <Grid Background="Ivory">
@@ -23,16 +24,30 @@
         </Grid>
         <Grid Margin="30" x:Name="PageGrid" DataContext="{StaticResource ViewModel}">
             <Grid.RowDefinitions>
-                <RowDefinition/>
+                <RowDefinition />
                 <RowDefinition Height="3*"/>
                 <RowDefinition/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition/>
+                <ColumnDefinition Width="2*"/>
                 <ColumnDefinition/>
             </Grid.ColumnDefinitions>
             <Grid x:Name="TitleGrid">
-                <Grid x:Name="TitleButtons" Visibility="{Binding IsFileLoaded, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <Grid x:Name="TitleButtons">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsFileLoaded}" Value="False"/>
+                                        <Condition Binding="{Binding IsEditingFileName}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
@@ -51,7 +66,21 @@
                             Grid.Column="1" 
                             Command="{Binding OpenFileCommand}"/>
                 </Grid>
-                <Grid x:Name="TitleTextGrid" Visibility="{Binding IsFileLoaded, Converter={StaticResource BoolToVisibilityConverter}}">
+                <Grid x:Name="TitleTextGrid" Visibility="{Binding IsFileLoaded, Converter={StaticResource BoolToVisibilityConverter}}" >
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <MultiDataTrigger>
+                                    <MultiDataTrigger.Conditions>
+                                        <Condition Binding="{Binding IsFileLoaded}" Value="True"/>
+                                        <Condition Binding="{Binding IsEditingFileName}" Value="False"/>
+                                    </MultiDataTrigger.Conditions>
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </MultiDataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock x:Name="TitleText" Text="{Binding FileName, FallbackValue=Title}" FontSize="48" MaxWidth="300" />
                         <TextBlock Margin="0,10">
@@ -60,15 +89,17 @@
                         </TextBlock>
                     </StackPanel>
                 </Grid>
-                <Grid x:Name="TitleTextboxGrid" Visibility="{Binding IsEditingFileName, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid x:Name="TitleTextboxGrid" 
+                  Visibility="{Binding IsEditingFileName, Converter={StaticResource BoolToVisibilityConverter}}" 
+                  Grid.ColumnSpan="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition Width="2*"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Label Content="File Name:" FontSize="24" Margin="0,20" Height="45"/>
-                    <TextBox x:Name="TitleTextbox" Text="{Binding NewFileName}" KeyDown="TitleTextbox_KeyDown" Grid.Column="1" MaxHeight="45"/>
-                    <Button Content="Save" Grid.Column="2" Height="40" Width="60" FontSize="24" Command="{Binding SaveFileNameCommand}"/>
+                    <TextBox x:Name="TitleTextbox" FontSize="24" Text="{Binding NewFileName}" KeyDown="TitleTextbox_KeyDown" Grid.Column="1" MaxHeight="45"/>
+                    <Button Content="Save" Name="SaveFileNameButton" Grid.Column="2" Height="40" Width="60" FontSize="24" Command="{Binding SaveFileNameCommand}"/>
                 </Grid>
             </Grid>
             <Grid Grid.Column="1" x:Name="ControlsGrid">
@@ -80,7 +111,7 @@
                     <ColumnDefinition/>
                     <ColumnDefinition Width="0.4*"/>
                 </Grid.ColumnDefinitions>
-                <Grid Grid.ColumnSpan="2" Margin="264,0,0,0" Grid.RowSpan="2">
+                <Grid Grid.ColumnSpan="2" Margin="100,0,0,0" Grid.RowSpan="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
                         <ColumnDefinition/>
@@ -105,8 +136,31 @@
                 </Grid>
             </Grid>
             <Grid Grid.Row="1" Grid.ColumnSpan="2" x:Name="MainGrid">
-                <DataGrid x:Name="DataGrid">
-
+                <DataGrid x:Name="DataGrid" 
+                          AutoGenerateColumns="False"
+                          IsEnabled="{Binding IsFileLoaded}"
+                          AlternatingRowBackground="LightYellow" 
+                          ItemsSource="{Binding DataRecords}">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn 
+                            Header="Name" 
+                            Binding="{Binding DataRecordName}" 
+                            Width="*"/>
+                        <DataGridTextColumn 
+                            Header="Description" 
+                            Binding="{Binding Description}" 
+                            Width="2*"/>
+                        <DataGridTextColumn 
+                            IsReadOnly="True" 
+                            Header="Created" 
+                            Binding="{Binding CreatedDate, Converter={StaticResource DateTextConverter}}" 
+                            Width="0.75*"/>
+                        <DataGridTextColumn 
+                            IsReadOnly="True" 
+                            Header="Modified" 
+                            Binding="{Binding DateModified, Converter={StaticResource DateTextConverter}}" 
+                            Width="0.75*"/>
+                    </DataGrid.Columns>
                 </DataGrid>
             </Grid>
             <Grid Grid.Row="2" x:Name="CloseGrid">

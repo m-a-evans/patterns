@@ -1,38 +1,40 @@
-﻿using Patterns.Data.Command.Parameter;
+﻿using CommunityToolkit.Diagnostics;
+using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
-using System;
+using System.Collections.Generic;
 
 namespace Patterns.Data.Command
 {
     public class CreateDataRecordCommand : DataCommand
     {
-        private DateTime _previousState;
-
-        private CreateDataRecordParam _param;
-
         public override string CommandName => nameof(CreateDataRecordCommand);
 
         public override DataCommandId Id => DataCommandId.CreateDataRecord;
 
-        public CreateDataRecordCommand(DataFile receiver)
+        public CreateDataRecordCommand(ICollection<DataRecord> receiver, CreateDataRecordParam? param = null)
         {
-            DataFile = receiver;
+            RecordCollection = receiver;
+            Param = param;
         }
 
         public override void Execute(IDataCommandParam? param = null)
         {
-            param ??= _param;
+            param ??= Param;
             if (param is CreateDataRecordParam createDataParam)
             {
-                DataFile.DataRecords.Add(createDataParam.DataRecord.CreatedDate, createDataParam.DataRecord);
-                _previousState = createDataParam.DataRecord.CreatedDate;
-                _param = createDataParam;
+                Param = createDataParam;
+                RecordCollection.Add(createDataParam.DataRecord);
+            }
+            else
+            {
+                ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(CreateDataRecordParam)}");
             }
         }
 
         public override void Unexecute()
         {
-            DataFile.DataRecords.Remove(_previousState);
+            CheckParamBeforeUnexecute();
+            RecordCollection.Remove(((CreateDataRecordParam)Param).DataRecord);
         }
     } 
 }

@@ -23,14 +23,36 @@ namespace PatternsUI.View
         public DataRecordsView()
         {
             InitializeComponent();
+            TitleTextbox.IsVisibleChanged += FocusBoxOnVisible;
+        }
+
+        /// <summary>
+        /// Focuses the text box when it becomes visible
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void FocusBoxOnVisible(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            bool wasVisible = (bool)e.OldValue;
+            bool isVisible = (bool)e.NewValue;
+
+            if (!wasVisible && isVisible && sender is TextBox box) 
+            {
+                box.Focus();
+            }
         }
 
         private void TitleTextbox_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter) 
             {
-
+                SaveFileNameButton.Command.Execute(TitleTextbox.Text);
             }
+        }
+
+        private void AddRemoveDataRow_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

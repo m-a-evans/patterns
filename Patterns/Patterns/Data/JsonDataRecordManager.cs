@@ -1,4 +1,5 @@
 ﻿using Patterns.Data.Model;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -56,7 +57,7 @@ namespace Patterns.IO
         /// <returns>The number of bytes written</returns>
         public long WriteDataRecords(DataFile dataFile)
         {
-            string collectionName = dataFile.FileName;
+            string collectionName = dataFile.FileName.Contains(dataFile.Path) ? dataFile.FileName : dataFile.Path + "/" + dataFile.FileName;
             DataRecord[] userRecordsAsArr = dataFile.DataRecords.Values.ToArray();
 
             string serialized = JsonSerializer.Serialize(userRecordsAsArr);
