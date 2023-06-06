@@ -1,19 +1,18 @@
 ﻿using CommunityToolkit.Diagnostics;
-using Patterns.Data.Command.Parameter;
+using Patterns.Command;
 using Patterns.Data.Model;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Patterns.Data.Command
 {
-    public abstract class DataCommand
+    public abstract class DataCommand : IPatternzCommand
     {
+        public CommandState State { get; set; }
         public DataFile? DataFile { get; protected set; }
         public ICollection<DataRecord>? RecordCollection { get; protected set;}
-        public virtual string CommandName { get; } = string.Empty;
-        public virtual DataCommandId Id { get; protected set; }
+        public virtual string Name { get; } = string.Empty;
 
-        public IDataCommandParam? Param { get; protected set; }
+        public IPatternzCommandParam? Param { get; protected set; }
 
         protected virtual void CheckParamBeforeUnexecute()
         {
@@ -25,6 +24,6 @@ namespace Patterns.Data.Command
 
         public abstract void Unexecute();
 
-        public abstract void Execute(IDataCommandParam? param = null);
+        public abstract void Execute(IPatternzCommandParam? param = null);
     }
 }

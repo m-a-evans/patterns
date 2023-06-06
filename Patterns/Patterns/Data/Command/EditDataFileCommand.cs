@@ -1,10 +1,6 @@
-﻿using Patterns.Data.Command.Parameter;
+﻿using Patterns.Command;
+using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Patterns.Data.Command
 {
@@ -13,9 +9,7 @@ namespace Patterns.Data.Command
         private DataFile _previousState;
         private EditDataFileParam _param;
 
-        public override string CommandName => nameof(EditDataFileCommand);
-
-        public override DataCommandId Id => DataCommandId.EditDataFile;
+        public override string Name => nameof(EditDataFileCommand);
 
         public EditDataFileCommand(DataFile receiver, EditDataFileParam? param = null)
         {
@@ -23,7 +17,7 @@ namespace Patterns.Data.Command
             Param = param;
         }
 
-        public override void Execute(IDataCommandParam? param = null)
+        public override void Execute(IPatternzCommandParam? param = null)
         {
             param ??= _param;
             if (param is EditDataFileParam editDataParam)
@@ -32,11 +26,13 @@ namespace Patterns.Data.Command
                 DataFile = editDataParam.DataFile;
                 _param = editDataParam;
             }
+            State = CommandState.Executed;
         }
 
         public override void Unexecute()
         {
             DataFile = _previousState;
+            State = CommandState.Unexecuted;
         }
     }
 }

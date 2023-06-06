@@ -1,19 +1,14 @@
 ﻿using CommunityToolkit.Diagnostics;
+using Patterns.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Patterns.Data.Command
 {
     public class RemoveDataRecordCommand : DataCommand
     {
-        public override string CommandName => nameof(RemoveDataRecordCommand);
-
-        public override DataCommandId Id => DataCommandId.RemoveDataRecord;
+        public override string Name => nameof(RemoveDataRecordCommand);
 
         public RemoveDataRecordCommand(ICollection<DataRecord> receiver, RemoveDataRecordParam? param = null)
         {
@@ -21,7 +16,7 @@ namespace Patterns.Data.Command
             Param = param;
         }
 
-        public override void Execute(IDataCommandParam? param = null)
+        public override void Execute(IPatternzCommandParam? param = null)
         {
             param ??= Param;
             if (param is RemoveDataRecordParam removeDataParam)
@@ -33,12 +28,14 @@ namespace Patterns.Data.Command
             {
                 ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(RemoveDataRecordParam)}");
             }
+            State = CommandState.Executed;
         }
 
         public override void Unexecute()
         {
             CheckParamBeforeUnexecute();
             RecordCollection.Add(((RemoveDataRecordParam)Param).DataRecord);
+            State = CommandState.Unexecuted;
         }
     }
 }

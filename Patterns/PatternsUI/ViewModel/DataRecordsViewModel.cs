@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Microsoft.Win32;
 using Patterns;
+using Patterns.Command;
 using Patterns.Data.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
@@ -29,12 +30,22 @@ namespace PatternsUI.ViewModel
     {
         #region Fields
 
-        private const int EmptyCommandHistoryIndex = -1;
-        private List<DataCommand> _commandHistory = new List<DataCommand>();
-        private int _commandHistoryIndex = EmptyCommandHistoryIndex;
-        private int _commandHistorySaveIndex = EmptyCommandHistoryIndex;
+        /// <summary>
+        /// Some properties are "automated" and so should be ignored when it comes
+        /// to handling data record updates
+        /// </summary>
+        private readonly List<string> _ignorableDataRecordProperties = new()
+        {
+            nameof(DataRecord.Empty.Id),
+            nameof(DataRecord.Empty.CreatedDate),
+            nameof(DataRecord.Empty.DateModified)
+        };
+
+        private CommandHistory _commandHistory;
+        private int _commandHistorySaveIndex;
 
         private DataFile? _currentFile;
+        private DataRecord? _oldRecord;
 
         private readonly object _saveHistoryLock = new();
 
@@ -42,6 +53,8 @@ namespace PatternsUI.ViewModel
         private const string DefaultDirectory = "../../../../data";
 
         private ObservableCollection<DataRecord> _dataRecords = new();
+
+        private Tuple<string, DataRecord> _propertyUpdatingHelper;
 
         #endregion
 
@@ -65,8 +78,7 @@ namespace PatternsUI.ViewModel
 
         public DataFile? DataFile { get { return _currentFile; } }
 
-        public bool IsDirty => _commandHistoryIndex != EmptyCommandHistoryIndex 
-            && _commandHistorySaveIndex != _commandHistoryIndex;
+        public bool IsDirty => _commandHistory.CurrentIndex != _commandHistorySaveIndex;
 
         public bool IsFileXml { get; set; } = false;
         public bool IsFileLoaded { get => _currentFile != null; }
@@ -95,14 +107,17 @@ namespace PatternsUI.ViewModel
         #region Constructors and Methods
         public DataRecordsViewModel() 
         {
+            _commandHistory = new();
+            _commandHistorySaveIndex = _commandHistory.CurrentIndex;
+
             ShowAboutCommand = new RelayCommand(ShowAbout);
             NavigateToUserManagementCommand = new RelayCommand(NavigateToUserManagement);
             NewFileCommand = new RelayCommand(NewFile);
             OpenFileCommand = new RelayCommand(OpenFile);
             SaveCommand = new RelayCommand(SaveData, CanSaveCommandExecute);
             CloseCommand = new RelayCommand(CloseCurrentFile, CanCloseCommandExecute);
-            UndoCommand = new RelayCommand(Undo, CanUndoCommandExecute);
-            RedoCommand = new RelayCommand(Redo, CanRedoCommandExecute);
+            UndoCommand = new RelayCommand(UndoLastCommand, CanUndoCommandExecute);
+            RedoCommand = new RelayCommand(RedoLastCommand, CanRedoCommandExecute);
             RenameCommand = new RelayCommand(RenameFile);
             EditFileNameCommand = new RelayCommand(SetEditFileNameMode);
             XmlSelectedCommand = new RelayCommand(SelectXmlFormat);
@@ -151,6 +166,7 @@ namespace PatternsUI.ViewModel
             foreach (DataRecord record in _dataRecords) 
             {
                 record.PropertyChanged -= OnDataRecordChanged;
+                record.PropertyChanging -= OnDataRecordChanging;
             }
         }
 
@@ -160,14 +176,21 @@ namespace PatternsUI.ViewModel
             {
                 if (e.NewItems?.Count > 0 && e.NewItems[0] is DataRecord record) 
                 {
-                    record.PropertyChanged += OnDataRecordChanged;
-                    PushToCommandHistory(new CreateDataRecordCommand(_dataRecords, new CreateDataRecordParam(record)));
+                    record.PropertyChanging += OnDataRecordChanging;
+                    record.PropertyChanged += OnDataRecordChanged;                    
                 }
             }
             else if (e.Action == NotifyCollectionChangedAction.Remove)
             {
                 if (e.OldItems?.Count > 0 && e.OldItems[0] is DataRecord record)
                 {
+                    if (_commandHistory.LastExecutedCommand is CreateDataRecordCommand createCmd 
+                        && createCmd.State == CommandState.Unexecuted)
+                    {
+                        // If this data record is being removed from undoing a create command, don't add to history
+                        // as a remove command
+                        return;
+                    }
                     PushToCommandHistory(new RemoveDataRecordCommand(_dataRecords, new RemoveDataRecordParam(record)));
                 }
             }
@@ -175,33 +198,40 @@ namespace PatternsUI.ViewModel
 
         private void OnDataRecordChanging(object? sender, PropertyChangingEventArgs e)
         {
-            // TODO - this will get called for every property update, so figure out a way to make it more versatile
-            // Also, we only want to record one command, rather than potentially 3 - here we should capture the current
-            // state of the record BEFORE it is updated. We can capture the difference then in the OnChanged method below
-            if (sender is DataRecord record && e.PropertyName != nameof(record.DateModified))
-            {
-                if (record.Id == Guid.Empty)
+            if (sender is DataRecord record)
+            {                
+                // If the property is one we can ignore, skip processing
+                if (_ignorableDataRecordProperties.Find(x => x == e.PropertyName) != null)
                 {
-                    record.Id = Guid.NewGuid();
-                    record.CreatedDate = DateTime.UtcNow;
+                    return;
                 }
-                record.DateModified = DateTime.UtcNow;
-                PushToCommandHistory(new EditDataRecordCommand(_dataRecords, new EditDataRecordParam(record)));
+                _oldRecord = record.DeepCopy();
             }
         }
 
         private void OnDataRecordChanged(object? sender, PropertyChangedEventArgs e) 
         {
             // TODO - see above TODO
-            if (sender is DataRecord record && e.PropertyName != nameof(record.DateModified)) 
+            if (sender is DataRecord record)
             {
+                // If the property is one we can ignore, skip processing
+                if (_ignorableDataRecordProperties.Find(x => x == e.PropertyName) != null)
+                {
+                    return;
+                }
+
+                record.DateModified = DateTime.UtcNow;
+
                 if (record.Id == Guid.Empty) 
                 {
                     record.Id = Guid.NewGuid();
                     record.CreatedDate = DateTime.UtcNow;
+                    PushToCommandHistory(new CreateDataRecordCommand(_dataRecords, new CreateDataRecordParam(record)));
                 }
-                record.DateModified = DateTime.UtcNow;
-                PushToCommandHistory(new EditDataRecordCommand(_dataRecords, new EditDataRecordParam(record)));
+                else if (_commandHistory.LastExecutedCommand?.State != CommandState.Unexecuted)
+                {
+                    PushToCommandHistory(new EditDataRecordCommand(_dataRecords, new EditDataRecordParam(record, _oldRecord?.DeepCopy())));
+                }
             }
         }
 
@@ -209,9 +239,10 @@ namespace PatternsUI.ViewModel
         {
             string fileName = name as string ?? NewFileName;
             _currentFile = new DataFile();
-            _currentFile.Format = IsFileXml ? DataRecordFormat.Xml : DataRecordFormat.Json;
-            _currentFile.FileName = AppendFileExtensionIfAbsent(fileName, _currentFile.Format);
+            _currentFile.Format = IsFileXml ? DataRecordFormat.Xml : DataRecordFormat.Json;            
             _currentFile.Path = DefaultDirectory;
+            _currentFile.FileName = _currentFile.Path + "/" + AppendFileExtensionIfAbsent(fileName, _currentFile.Format);
+            _commandHistory.FileName = _currentFile.FileName;
             SaveData(null);
         }
 
@@ -238,25 +269,33 @@ namespace PatternsUI.ViewModel
 
         private bool CanRedoCommandExecute(object? _)
         {
-            return _commandHistory.Count - 1 > _commandHistoryIndex;
+            return _commandHistory.CanRedo();            
+        }
+
+        /// <summary>
+        /// Executes the undone command that was after the most recently used command.
+        /// </summary>
+        /// <param name="_"></param>
+        private void RedoLastCommand(object? _)
+        {
+            _commandHistory.Redo();
+            //SaveCommandHistory();
         }
 
         private bool CanUndoCommandExecute(object? _)
         {
-            return _commandHistory.Count > 0;
+            return _commandHistory.CanUndo();
+        }
+
+        private void UndoLastCommand(object? _)
+        {
+            _commandHistory.Undo();
+            //SaveCommandHistory();
         }
 
         private void PushToCommandHistory(DataCommand cmd)
         {
-            if (_commandHistory.Count - 1 == _commandHistoryIndex)
-            {
-                _commandHistory.Add(cmd);
-            }
-            else
-            {
-                _commandHistory[_commandHistoryIndex] = cmd;
-            }
-            _commandHistoryIndex += 1;
+            _commandHistory.AddCommand(cmd);
             //SaveCommandHistory();
         }
 
@@ -267,39 +306,34 @@ namespace PatternsUI.ViewModel
                 return;
             }
 
-            CommandHistoryMetadata? metadata = JsonSerializer.Deserialize<CommandHistoryMetadata>(PatternzCommandListName);
+            CommandHistory? commandHistory = JsonSerializer.Deserialize<CommandHistory>(PatternzCommandListName);
 
-            if (metadata == null)
+            if (commandHistory == null)
             {
                 return;
             }
 
-            if (!File.Exists(metadata.FileName))
+            if (!File.Exists(commandHistory.FileName))
             {
                 return;
             }
-            string justFileName = Path.GetFileName(metadata.FileName);
+            string justFileName = Path.GetFileName(commandHistory.FileName);
             Messenger.Send(new ShowYesNoPopupMessage("Recover file?", $"Patternz has detected that {justFileName} has changes that can be recovered. Proceed?", 
                 (yes) =>
                 {
                     if (yes)
                     {
-                        RecoverFile(metadata);
+                        RecoverFile(commandHistory);
                     }
                 })
             );
         }
 
-        private void RecoverFile(CommandHistoryMetadata metadata)
+        private void RecoverFile(CommandHistory commandHistory)
         {
-            LoadFileByName(metadata.FileName);
-            _commandHistory = metadata.History;
-            _commandHistoryIndex = EmptyCommandHistoryIndex;
-            // Redo all commands stored in the history 
-            while(CanRedoCommandExecute(null))
-            {
-                Redo(null);
-            }
+            LoadFileByName(commandHistory.FileName);
+            _commandHistory = commandHistory;
+            _commandHistory.ExecuteEntireHistory();
         }
 
         private void SetEditFileNameMode(object? _)
@@ -349,7 +383,7 @@ namespace PatternsUI.ViewModel
             CopyRecordsToFile(_currentFile, DataRecords);
             _ = dataRecordManager.WriteDataRecords(_currentFile);
 
-            _commandHistorySaveIndex = _commandHistoryIndex;
+            _commandHistorySaveIndex = _commandHistory.CurrentIndex;
 
             IsEditingFileName = false;
             NotifyAllProperties();
@@ -415,13 +449,13 @@ namespace PatternsUI.ViewModel
                 CopyRecordsFromFile(_currentFile, _dataRecords);
                 foreach(DataRecord record in _dataRecords)
                 {
+                    record.PropertyChanging += OnDataRecordChanging;
                     record.PropertyChanged += OnDataRecordChanged;
                 }
                 // Clear command history, since technically loading the records from file
                 // counts as create commands
-                _commandHistory.Clear();
-                _commandHistoryIndex = EmptyCommandHistoryIndex;
-                _commandHistorySaveIndex = EmptyCommandHistoryIndex;
+                _commandHistory.Reset();
+                _commandHistorySaveIndex = _commandHistory.CurrentIndex;
                 NotifyAllProperties();
             }
         }
@@ -436,9 +470,8 @@ namespace PatternsUI.ViewModel
             IsFileXml = false;
 
             _currentFile = null;
-            _commandHistory.Clear();
-            _commandHistoryIndex = EmptyCommandHistoryIndex;
-            _commandHistorySaveIndex = EmptyCommandHistoryIndex;
+            _commandHistory.Reset();
+            _commandHistorySaveIndex = _commandHistory.CurrentIndex;
             _dataRecords.Clear();
 
             NotifyAllProperties();
@@ -493,26 +526,6 @@ namespace PatternsUI.ViewModel
             }
         }
 
-        /// <summary>
-        /// Executes the undone command that was after the most recently used command.
-        /// </summary>
-        /// <param name="_"></param>
-        private void Redo(object? _)
-        {
-            _commandHistoryIndex += 1;
-            DataCommand command = _commandHistory[_commandHistoryIndex];
-            command.Execute();
-            //SaveCommandHistory();
-        }
-
-        private void Undo(object? _)
-        {
-            DataCommand command = _commandHistory[_commandHistoryIndex];
-            command.Unexecute();
-            _commandHistoryIndex -= 1;
-            //SaveCommandHistory();
-        }
-
         private void SaveCommandHistory()
         {
             Task saveCmd = Task.Run(() =>
@@ -520,13 +533,13 @@ namespace PatternsUI.ViewModel
                 lock (_saveHistoryLock)
                 {
                     File.WriteAllText(PatternzCommandListName,
-                    JsonSerializer.Serialize(new CommandHistoryMetadata()
+                    JsonSerializer.Serialize(new CommandHistory()
                     {
                         FileName = FileName,
                         // Get all commands executed since last Save
                         // TODO - make this store a list of commands in order from here since last save
-                        History = _commandHistory.GetRange(_commandHistorySaveIndex, _commandHistoryIndex + 1)
-                    })) ;
+                        History = _commandHistory.GetRelativeHistory(_commandHistorySaveIndex)
+                    })); ;
                 }
             }).ContinueWith((t) => {
                 if (t.IsFaulted)

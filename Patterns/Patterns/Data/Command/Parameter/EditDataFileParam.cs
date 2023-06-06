@@ -1,8 +1,9 @@
-﻿using Patterns.Data.Model;
+﻿using Patterns.Command;
+using Patterns.Data.Model;
 
 namespace Patterns.Data.Command.Parameter
 {
-    public class EditDataFileParam : IDataCommandParam
+    public class EditDataFileParam : IPatternzCommandParam
     {
         public string Name => nameof(EditDataFileParam);
 

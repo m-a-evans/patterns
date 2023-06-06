@@ -49,10 +49,5 @@ namespace PatternsUI.View
                 SaveFileNameButton.Command.Execute(TitleTextbox.Text);
             }
         }
-
-        private void AddRemoveDataRow_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
     }
 }

@@ -1,8 +1,9 @@
-﻿using Patterns.Data.Model;
+﻿using Patterns.Command;
+using Patterns.Data.Model;
 
 namespace Patterns.Data.Command.Parameter
 {
-    public class CreateDataRecordParam : IDataCommandParam
+    public class CreateDataRecordParam : IPatternzCommandParam
     {
         public string Name => nameof(CreateDataRecordParam);
 

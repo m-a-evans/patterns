@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
+using Patterns.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
 
@@ -8,9 +9,7 @@ namespace Patterns.Data.Command
     {
         private DataRecordFormat _previousState;
 
-        public override string CommandName => nameof(SetDataRecordFormatCommand);
-
-        public override DataCommandId Id => DataCommandId.SetDataRecordFormat;
+        public override string Name => nameof(SetDataRecordFormatCommand);
 
         public SetDataRecordFormatCommand(DataFile receiver, SetDataRecordFormatParam? param = null)
         {
@@ -18,25 +17,27 @@ namespace Patterns.Data.Command
             Param = param;
         }
 
-        public override void Execute(IDataCommandParam? param = null)
+        public override void Execute(IPatternzCommandParam? param = null)
         {
             param ??= Param;
             if (param is SetDataRecordFormatParam formatParam)
             {
                 Param = formatParam;
                 _previousState = DataFile.Format;
-                DataFile.Format = formatParam.Format;
+                DataFile.Format = formatParam.Format;                
             }
             else
             {
                 ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(CreateDataRecordParam)}");
             }
+            State = CommandState.Executed;
         }
 
         public override void Unexecute()
         {
             CheckParamBeforeUnexecute();
             DataFile.Format = _previousState;
+            State = CommandState.Unexecuted;
         }
     }
 }

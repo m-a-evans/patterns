@@ -1,4 +1,5 @@
-﻿using Patterns.Data.Model;
+﻿using Patterns.Command;
+using Patterns.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Patterns.Data.Command.Parameter
 {
-    public class RemoveDataRecordParam : IDataCommandParam
+    public class RemoveDataRecordParam : IPatternzCommandParam
     {
         public string Name => nameof(RemoveDataRecordParam);
 

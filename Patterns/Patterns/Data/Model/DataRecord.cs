@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using Windows.ApplicationModel.Chat;
 
 namespace Patterns.Data.Model
 {
@@ -9,6 +10,7 @@ namespace Patterns.Data.Model
     /// </summary>
     public class DataRecord : INotifyPropertyChanged, INotifyPropertyChanging
     {
+        #region Fields and Constants
         private static readonly DataRecord _emptyRecord = new DataRecord()
         {
             Id = Guid.Empty,
@@ -17,14 +19,16 @@ namespace Patterns.Data.Model
             Description = string.Empty,
             CreatedDate = DateTime.MinValue
         };
-        public static DataRecord Empty => _emptyRecord;
 
         private Guid _id = Guid.Empty;
         private DateTime _dateModified = DateTime.MinValue;
         private string _description = string.Empty;
         private string _dataRecordName = string.Empty;
         private DateTime _createdDate = DateTime.MinValue;
+        #endregion
 
+        #region Properties and Constructors
+        public static DataRecord Empty => _emptyRecord;
         public Guid Id
         {
             get
@@ -123,13 +127,15 @@ namespace Patterns.Data.Model
                 DateModified = DateModified
             };
         }
+        #endregion
 
+        #region Methods
         /// <summary>
         /// For simplicity, a data record is considered equal only if the GUID is equal
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public bool Equals(DataRecord other) 
+        public bool Equals(DataRecord? other) 
         {
             if (ReferenceEquals(null, other)) 
                 return false;
@@ -141,6 +147,9 @@ namespace Patterns.Data.Model
             return Id.GetHashCode();
         }
 
+        #endregion
+
+        #region Private Methods
         protected void OnPropertyChanging([CallerMemberName] string? propName = null)
         {
             PropertyChanging?.Invoke(this, new PropertyChangingEventArgs(propName));
@@ -150,5 +159,26 @@ namespace Patterns.Data.Model
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
         }
+        #endregion
+
+        #region Operators
+        public static bool operator ==(DataRecord? a, DataRecord? b)
+        {
+            if (!ReferenceEquals(null, a))
+            {
+                return a.Equals(b);
+            }
+            if (!ReferenceEquals(null, b))
+            {
+                return b.Equals(a);
+            }
+            return true;
+        }
+
+        public static bool operator !=(DataRecord? a, DataRecord? b)
+        {
+            return !(a == b);
+        }
+        #endregion
     }
 }

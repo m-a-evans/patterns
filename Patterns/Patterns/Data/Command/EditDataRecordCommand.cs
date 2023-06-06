@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
+using Patterns.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
 using System.Collections.Generic;
@@ -9,17 +10,19 @@ namespace Patterns.Data.Command
     public class EditDataRecordCommand : DataCommand
     {
         private DataRecord? _previousState;
-        public override string CommandName => nameof(EditDataRecordCommand);
-
-        public override DataCommandId Id => DataCommandId.EditDataRecord;
+        public override string Name => nameof(EditDataRecordCommand);
 
         public EditDataRecordCommand(ICollection<DataRecord> receiver, EditDataRecordParam? param = null)
         {
             RecordCollection = receiver;
             Param = param;
+            if (param?.PreviousState != null) 
+            {
+                _previousState = param.PreviousState;
+            }
         }
 
-        public override void Execute(IDataCommandParam? param = null)
+        public override void Execute(IPatternzCommandParam? param = null)
         {
             param ??= Param;
             if (param is EditDataRecordParam setDataParam)
@@ -31,12 +34,14 @@ namespace Patterns.Data.Command
             {
                 ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(EditDataRecordParam)}");
             }
+            State = CommandState.Executed;
         }
 
         public override void Unexecute()
         {
             CheckParamBeforeUnexecute();
             _ = ReplaceRecordInCollection(_previousState!);
+            State = CommandState.Unexecuted;
         }
 
         private DataRecord ReplaceRecordInCollection(DataRecord newRecord)
