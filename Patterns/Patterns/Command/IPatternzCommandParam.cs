@@ -1,9 +1,9 @@
-﻿using Patterns.Data.Model;
-
-namespace Patterns.Command
+﻿namespace Patterns.Command
 {
     public interface IPatternzCommandParam
     {
         string Name { get; }
+
+        object Value { get; }
     }
 }

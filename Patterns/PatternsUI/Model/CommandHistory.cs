@@ -1,4 +1,5 @@
 ﻿using Patterns.Command;
+using Patterns.Data.Command;
 using System.Collections.Generic;
 
 namespace PatternsUI.Model
@@ -9,10 +10,10 @@ namespace PatternsUI.Model
 
         public int CurrentIndex { get; private set; } = EmptyCommandHistoryIndex;
        
-        public IPatternzCommand? LastExecutedCommand { get; private set; }
+        public DataCommand? LastExecutedCommand { get; private set; }
 
         public string FileName { get; set; } = string.Empty;
-        public List<IPatternzCommand> History { get; set; } = new List<IPatternzCommand>();
+        public List<DataCommand> History { get; set; } = new List<DataCommand>();
 
         public bool CanRedo()
         {
@@ -27,17 +28,17 @@ namespace PatternsUI.Model
         public void Redo()
         {
             CurrentIndex += 1;
-            IPatternzCommand command = History[CurrentIndex];
-            command.Execute();
+            DataCommand command = History[CurrentIndex];
             LastExecutedCommand = command;
+            command.Execute();            
         }
 
         public void Undo()
         {
-            IPatternzCommand command = History[CurrentIndex];
-            command.Unexecute();            
-            CurrentIndex -= 1;
+            DataCommand command = History[CurrentIndex];
             LastExecutedCommand = command;
+            command.Unexecute();            
+            CurrentIndex -= 1;            
         }
 
         /// <summary>
@@ -47,7 +48,7 @@ namespace PatternsUI.Model
         /// </summary>
         /// <param name="command">The command to add to history</param>
         /// <param name="wasExecuted">Optional. Flag indicating this command was the last command executed</param>
-        public void AddCommand(IPatternzCommand command, bool wasExecuted = true)
+        public void AddCommand(DataCommand command, bool wasExecuted = true)
         {
             CurrentIndex += 1;
 
@@ -84,11 +85,11 @@ namespace PatternsUI.Model
             }
         }
 
-        public List<IPatternzCommand> GetRelativeHistory(int fromIndex)
+        public List<DataCommand> GetRelativeHistory(int fromIndex)
         {
             if (History.Count == 0 || fromIndex == CurrentIndex)
             {
-                return new List<IPatternzCommand>();
+                return new List<DataCommand>();
             }
             else if (fromIndex < CurrentIndex)
             {

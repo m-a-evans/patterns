@@ -21,21 +21,21 @@ namespace Patterns.Data.Command
             param ??= Param;
             if (param is RemoveDataRecordParam removeDataParam)
             {
+                State = CommandState.Executed;
                 Param = removeDataParam;
                 RecordCollection.Remove(removeDataParam.DataRecord);
             }
             else
             {
                 ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(RemoveDataRecordParam)}");
-            }
-            State = CommandState.Executed;
+            }            
         }
 
         public override void Unexecute()
         {
             CheckParamBeforeUnexecute();
-            RecordCollection.Add(((RemoveDataRecordParam)Param).DataRecord);
             State = CommandState.Unexecuted;
+            RecordCollection.Add(((RemoveDataRecordParam)Param).DataRecord);            
         }
     }
 }

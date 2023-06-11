@@ -22,6 +22,7 @@ namespace Patterns.Data.Command
             param ??= Param;
             if (param is SetDataRecordFormatParam formatParam)
             {
+                State = CommandState.Executed;
                 Param = formatParam;
                 _previousState = DataFile.Format;
                 DataFile.Format = formatParam.Format;                
@@ -29,15 +30,14 @@ namespace Patterns.Data.Command
             else
             {
                 ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(CreateDataRecordParam)}");
-            }
-            State = CommandState.Executed;
+            }            
         }
 
         public override void Unexecute()
         {
             CheckParamBeforeUnexecute();
-            DataFile.Format = _previousState;
             State = CommandState.Unexecuted;
+            DataFile.Format = _previousState;            
         }
     }
 }

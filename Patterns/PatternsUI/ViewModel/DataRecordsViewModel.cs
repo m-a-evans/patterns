@@ -124,8 +124,6 @@ namespace PatternsUI.ViewModel
             JsonSelectedCommand = new RelayCommand(SelectJsonFormat);
             SaveFileNameCommand = new RelayCommand(CreateNewDataFile);
 
-            _dataRecords.CollectionChanged += OnDataRecordCollectionChanged;
-
             PrepareMenuItems();
         }
 
@@ -138,7 +136,7 @@ namespace PatternsUI.ViewModel
                 {
                     if (confirmed)
                     {
-                        CleanupEventListeners();
+                        DisableDataRecordEventListeners();
                         exit();
                     }                        
                 });
@@ -146,7 +144,7 @@ namespace PatternsUI.ViewModel
             }
             else
             {
-                CleanupEventListeners();
+                DisableDataRecordEventListeners();
                 exit();
             }
         }
@@ -155,12 +153,39 @@ namespace PatternsUI.ViewModel
 
         #region Private Methods
         
-        private void CleanupEventListeners()
+        /// <summary>
+        /// Starts event listeners for data record change events
+        /// </summary>
+        private void EnableDataRecordEventListeners()
+        {
+            _dataRecords.CollectionChanged += OnDataRecordCollectionChanged;
+            AddAllDataRecordListeners();
+        }
+
+        /// <summary>
+        /// Stops event listeners for data record change events
+        /// </summary>
+        private void DisableDataRecordEventListeners()
         {
             _dataRecords.CollectionChanged -= OnDataRecordCollectionChanged;
             RemoveAllDataRecordListeners();
         }
 
+        /// <summary>
+        /// Adds event listeners to every record in the current data set
+        /// </summary>
+        private void AddAllDataRecordListeners()
+        {
+            foreach (DataRecord record in _dataRecords)
+            {
+                record.PropertyChanged += OnDataRecordChanged;
+                record.PropertyChanging += OnDataRecordChanging;
+            }
+        }
+
+        /// <summary>
+        /// Removes all event listeners from every record in the current data set
+        /// </summary>
         private void RemoveAllDataRecordListeners()
         {
             foreach (DataRecord record in _dataRecords) 
@@ -170,6 +195,11 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Event handler for when data records are added or removed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnDataRecordCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Add)
@@ -185,7 +215,9 @@ namespace PatternsUI.ViewModel
                 if (e.OldItems?.Count > 0 && e.OldItems[0] is DataRecord record)
                 {
                     if (_commandHistory.LastExecutedCommand is CreateDataRecordCommand createCmd 
-                        && createCmd.State == CommandState.Unexecuted)
+                        && createCmd.State == CommandState.Unexecuted
+                        && createCmd.Param?.Value is DataRecord created
+                        && record.Id == created.Id)
                     {
                         // If this data record is being removed from undoing a create command, don't add to history
                         // as a remove command
@@ -196,6 +228,11 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Event handler for when a data record is in the process of changing
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnDataRecordChanging(object? sender, PropertyChangingEventArgs e)
         {
             if (sender is DataRecord record)
@@ -209,9 +246,13 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Event handler for when a data record has changed
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void OnDataRecordChanged(object? sender, PropertyChangedEventArgs e) 
         {
-            // TODO - see above TODO
             if (sender is DataRecord record)
             {
                 // If the property is one we can ignore, skip processing
@@ -226,7 +267,7 @@ namespace PatternsUI.ViewModel
                 {
                     record.Id = Guid.NewGuid();
                     record.CreatedDate = DateTime.UtcNow;
-                    PushToCommandHistory(new CreateDataRecordCommand(_dataRecords, new CreateDataRecordParam(record)));
+                    PushToCommandHistory(new CreateDataRecordCommand(_dataRecords, new CreateDataRecordParam(record.DeepCopy())));
                 }
                 else if (_commandHistory.LastExecutedCommand?.State != CommandState.Unexecuted)
                 {
@@ -235,6 +276,10 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Prepares a new DataFile to be the current file
+        /// </summary>
+        /// <param name="name"></param>
         private void CreateNewDataFile(object? name)
         {
             string fileName = name as string ?? NewFileName;
@@ -243,9 +288,17 @@ namespace PatternsUI.ViewModel
             _currentFile.Path = DefaultDirectory;
             _currentFile.FileName = _currentFile.Path + "/" + AppendFileExtensionIfAbsent(fileName, _currentFile.Format);
             _commandHistory.FileName = _currentFile.FileName;
+            EnableDataRecordEventListeners();
             SaveData(null);
         }
 
+        /// <summary>
+        /// Adds a file extension to a file name based on its format. If the extension already exists on the file,
+        /// this method does nothing
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="format"></param>
+        /// <returns></returns>
         private string AppendFileExtensionIfAbsent(string fileName, DataRecordFormat format)
         {
             if (!Path.HasExtension(fileName))
@@ -262,11 +315,21 @@ namespace PatternsUI.ViewModel
             return fileName;
         }
 
+        /// <summary>
+        /// Checks if the current state allows for closing the current file
+        /// </summary>
+        /// <param name="_"></param>
+        /// <returns></returns>
         private bool CanCloseCommandExecute(object? _)
         {
             return IsFileLoaded || IsEditingFileName;
         }
 
+        /// <summary>
+        /// Checks if the user is allowed to redo the last executed command
+        /// </summary>
+        /// <param name="_"></param>
+        /// <returns></returns>
         private bool CanRedoCommandExecute(object? _)
         {
             return _commandHistory.CanRedo();            
@@ -278,27 +341,51 @@ namespace PatternsUI.ViewModel
         /// <param name="_"></param>
         private void RedoLastCommand(object? _)
         {
+            DisableDataRecordEventListeners();
             _commandHistory.Redo();
             //SaveCommandHistory();
+            EnableDataRecordEventListeners();
+            NotifyAllProperties();
         }
 
+        /// <summary>
+        /// Checks if the user is allowed to undo the last executed command
+        /// </summary>
+        /// <param name="_"></param>
+        /// <returns></returns>
         private bool CanUndoCommandExecute(object? _)
         {
             return _commandHistory.CanUndo();
         }
 
+        /// <summary>
+        /// Undoes the last executed command
+        /// </summary>
+        /// <param name="_"></param>
         private void UndoLastCommand(object? _)
         {
+            DisableDataRecordEventListeners();
             _commandHistory.Undo();
             //SaveCommandHistory();
+            EnableDataRecordEventListeners();
+            NotifyAllProperties();
         }
 
+        /// <summary>
+        /// Adds a DataCommand to the command history
+        /// </summary>
+        /// <param name="cmd"></param>
         private void PushToCommandHistory(DataCommand cmd)
         {
             _commandHistory.AddCommand(cmd);
             //SaveCommandHistory();
+
         }
 
+        /// <summary>
+        /// Checks for a recovery file in the local directory, allowing the user
+        /// to recover lost work
+        /// </summary>
         private void CheckForRecoveryFile()
         {
             if (!File.Exists(PatternzCommandListName))
@@ -329,6 +416,10 @@ namespace PatternsUI.ViewModel
             );
         }
 
+        /// <summary>
+        /// Loads a file and redoes its entire command history
+        /// </summary>
+        /// <param name="commandHistory"></param>
         private void RecoverFile(CommandHistory commandHistory)
         {
             LoadFileByName(commandHistory.FileName);
@@ -336,12 +427,20 @@ namespace PatternsUI.ViewModel
             _commandHistory.ExecuteEntireHistory();
         }
 
+        /// <summary>
+        /// Prepares the state to allow for editing the current file name
+        /// </summary>
+        /// <param name="_"></param>
         private void SetEditFileNameMode(object? _)
         {
             IsEditingFileName = true;
             NotifyPropertyChanged(nameof(IsEditingFileName));
         }
 
+        /// <summary>
+        /// Updates the current file format to be JSON
+        /// </summary>
+        /// <param name="_"></param>
         private void SelectJsonFormat(object? _)
         {
             if (IsFileXml)
@@ -354,6 +453,10 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Updates the current file format to be XML
+        /// </summary>
+        /// <param name="_"></param>
         private void SelectXmlFormat(object? _)
         {
             if (!IsFileXml)
@@ -366,11 +469,21 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Returns true if the user is allowed to save a file given the current state
+        /// </summary>
+        /// <param name="_"></param>
+        /// <returns></returns>
         private bool CanSaveCommandExecute(object? _)
         {
             return IsDirty && IsFileLoaded;
         }
 
+        /// <summary>
+        /// Persists the current file's contents to storage. This will set the save index to the current 
+        /// command history index
+        /// </summary>
+        /// <param name="_"></param>
         private void SaveData(object? _)
         {
             if (_currentFile == null)
@@ -389,6 +502,11 @@ namespace PatternsUI.ViewModel
             NotifyAllProperties();
         }
 
+        /// <summary>
+        /// Reads the data records from a record collection into a DataFile
+        /// </summary>
+        /// <param name="file">The file to read the records into</param>
+        /// <param name="records">The records to read</param>
         private void CopyRecordsToFile(DataFile file, ICollection<DataRecord> records)
         {
             file.DataRecords.Clear();
@@ -401,6 +519,11 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Reads the data records from a file into the record collection
+        /// </summary>
+        /// <param name="file">The file to read records from</param>
+        /// <param name="records">The collection to add the read records into</param>
         private void CopyRecordsFromFile(DataFile file, ICollection<DataRecord> records)
         {
             records.Clear();
@@ -410,6 +533,10 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Prepares the state for adding a new file
+        /// </summary>
+        /// <param name="_"></param>
         private void NewFile(object? _)
         {
             ResetAllProperties();
@@ -435,6 +562,11 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        /// <summary>
+        /// Loads a file by name, setting the current file and its contents in memory. 
+        /// The filename must be the fully qualified path of the file.
+        /// </summary>
+        /// <param name="fileName"></param>
         private void LoadFileByName(string fileName)
         {
             _currentFile = null;
@@ -447,15 +579,8 @@ namespace PatternsUI.ViewModel
                 IsFileXml = _currentFile.Format == DataRecordFormat.Xml;
                 IsEditingFileName = false;
                 CopyRecordsFromFile(_currentFile, _dataRecords);
-                foreach(DataRecord record in _dataRecords)
-                {
-                    record.PropertyChanging += OnDataRecordChanging;
-                    record.PropertyChanged += OnDataRecordChanged;
-                }
-                // Clear command history, since technically loading the records from file
-                // counts as create commands
-                _commandHistory.Reset();
-                _commandHistorySaveIndex = _commandHistory.CurrentIndex;
+
+                EnableDataRecordEventListeners();
                 NotifyAllProperties();
             }
         }
@@ -500,7 +625,7 @@ namespace PatternsUI.ViewModel
         {
             Action closeAction = () =>
             {
-                RemoveAllDataRecordListeners();
+                DisableDataRecordEventListeners();
                 ResetAllProperties();
 
                 // Delete command history file

@@ -26,34 +26,44 @@ namespace Patterns.Data.Command
         {
             param ??= Param;
             if (param is EditDataRecordParam setDataParam)
-            { 
+            {
+                State = CommandState.Executed;
                 Param = setDataParam;
                 _previousState = ReplaceRecordInCollection(setDataParam.DataRecord);
             }
             else
             {
                 ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(EditDataRecordParam)}");
-            }
-            State = CommandState.Executed;
+            }            
         }
 
         public override void Unexecute()
         {
             CheckParamBeforeUnexecute();
-            _ = ReplaceRecordInCollection(_previousState!);
             State = CommandState.Unexecuted;
+            _ = ReplaceRecordInCollection(_previousState!);            
         }
 
         private DataRecord ReplaceRecordInCollection(DataRecord newRecord)
         {
             DataRecord? retVal = null;
+            DataRecord record;
             for (int i = 0; i < RecordCollection.Count; i++)
             {
-                DataRecord record = RecordCollection.ElementAt(i);
+                record = RecordCollection.ElementAt(i);
                 if (record.Id == newRecord.Id)
                 {
                     retVal = RecordCollection.ElementAt(i).DeepCopy();
-                    record = newRecord;
+                    if (RecordCollection is IList<DataRecord> list)
+                    {
+                        list.RemoveAt(i);
+                        list.Insert(i, newRecord.DeepCopy());
+                    }
+                    else
+                    {
+                        RecordCollection.Remove(record);
+                        RecordCollection.Add(newRecord.DeepCopy());
+                    }
                     break;
                 }
             }

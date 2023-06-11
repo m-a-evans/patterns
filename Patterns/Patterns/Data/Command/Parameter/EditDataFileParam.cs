@@ -7,6 +7,7 @@ namespace Patterns.Data.Command.Parameter
     {
         public string Name => nameof(EditDataFileParam);
 
+        public object Value { get => DataFile; }
         public DataFile DataFile { get; private set; }
         
         public EditDataFileParam(DataFile dataFile) 

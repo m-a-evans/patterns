@@ -22,17 +22,17 @@ namespace Patterns.Data.Command
             param ??= _param;
             if (param is EditDataFileParam editDataParam)
             {
-                _previousState = DataFile.DeepCopy();
+                State = CommandState.Executed;
+                _previousState = DataFile!.DeepCopy();
                 DataFile = editDataParam.DataFile;
                 _param = editDataParam;
-            }
-            State = CommandState.Executed;
+            }            
         }
 
         public override void Unexecute()
         {
-            DataFile = _previousState;
             State = CommandState.Unexecuted;
+            DataFile = _previousState;            
         }
     }
 }

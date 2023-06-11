@@ -3,6 +3,7 @@ using Patterns.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Patterns.Data.Command
 {
@@ -20,21 +21,31 @@ namespace Patterns.Data.Command
             param ??= Param;
             if (param is CreateDataRecordParam createDataParam)
             {
+                State = CommandState.Executed;
                 Param = createDataParam;
                 RecordCollection.Add(createDataParam.DataRecord);
             }
             else
             {
                 ThrowHelper.ThrowArgumentException($"Param must be of type {nameof(CreateDataRecordParam)}");
-            }
-            State = CommandState.Executed;
+            }            
         }
 
         public override void Unexecute()
         {
             CheckParamBeforeUnexecute();
-            RecordCollection.Remove(((CreateDataRecordParam)Param).DataRecord);
             State = CommandState.Unexecuted;
+            RecordCollection.Remove(((CreateDataRecordParam)Param).DataRecord);
+            DataRecord record;
+            for (int i = 0; i < RecordCollection.Count; i++)
+            {
+                record = RecordCollection.ElementAt(i);
+                if (record.Id == ((CreateDataRecordParam)Param).DataRecord.Id)
+                {
+                    RecordCollection.Remove(record);
+                    break;
+                }
+            }
         }
     } 
 }

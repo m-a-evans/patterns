@@ -7,6 +7,8 @@ namespace Patterns.Data.Command.Parameter
     {
         public string Name => nameof(CreateDataRecordParam);
 
+        public object Value { get => DataRecord; }
+
         public DataRecord DataRecord { get; private set; }
 
         public CreateDataRecordParam(DataRecord dataRecord)

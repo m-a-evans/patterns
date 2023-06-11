@@ -7,6 +7,8 @@ namespace Patterns.Data.Command.Parameter
     {
         public string Name => nameof(SetDataRecordFormatParam);
 
+        public object Value { get => Format; }
+
         public DataRecordFormat Format { get; private set; }
 
         public SetDataRecordFormatParam(DataRecordFormat format)
