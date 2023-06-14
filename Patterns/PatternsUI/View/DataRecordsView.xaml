@@ -36,7 +36,7 @@
                 <Grid x:Name="TitleButtons">
                     <Grid.Style>
                         <Style TargetType="Grid">
-                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Visibility" Value="Hidden"/>
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
@@ -66,10 +66,10 @@
                             Grid.Column="1" 
                             Command="{Binding OpenFileCommand}"/>
                 </Grid>
-                <Grid x:Name="TitleTextGrid" Visibility="{Binding IsFileLoaded, Converter={StaticResource BoolToVisibilityConverter}}" >
+                <Grid x:Name="TitleTextGrid" >
                     <Grid.Style>
                         <Style TargetType="Grid">
-                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Setter Property="Visibility" Value="Hidden"/>
                             <Style.Triggers>
                                 <MultiDataTrigger>
                                     <MultiDataTrigger.Conditions>
@@ -84,8 +84,9 @@
                     <StackPanel Orientation="Horizontal">
                         <TextBlock x:Name="TitleText" Text="{Binding FileName, FallbackValue=Title}" FontSize="48" MaxWidth="300" />
                         <TextBlock Margin="0,10">
-                            <Hyperlink x:Name="ChangeTitleText" Command="{Binding EditFileNameCommand}"/>
-                            Change
+                            <Hyperlink x:Name="ChangeTitleText" Command="{Binding EditFileNameCommand}">
+                                Edit File Name
+                            </Hyperlink>
                         </TextBlock>
                     </StackPanel>
                 </Grid>
@@ -184,10 +185,10 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <RadioButton Content="XML" FontSize="20" GroupName="FormatGroup" 
-                                     IsChecked="{Binding IsFileXml}"  
+                                     IsChecked="{Binding IsFileXml, Mode=OneWay}"  
                                      Command="{Binding XmlSelectedCommand}"/>
                         <RadioButton Content="JSON" FontSize="20" GroupName="FormatGroup" Grid.Row="1"
-                                     IsChecked="{Binding IsFileXml, Converter={StaticResource InverseBooleanConverter}}" 
+                                     IsChecked="{Binding IsFileXml, Mode=OneWay, Converter={StaticResource InverseBooleanConverter}}" 
                                      Command="{Binding JsonSelectedCommand}"/>
                     </Grid>
                     <Button Grid.Column="1" 

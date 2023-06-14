@@ -3,6 +3,7 @@ using Patterns.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Patterns.Data.Command
 {
@@ -12,6 +13,8 @@ namespace Patterns.Data.Command
 
         public RemoveDataRecordCommand(ICollection<DataRecord> receiver, RemoveDataRecordParam? param = null)
         {
+            Debug.Write("New RemoveDataRecordCommand ");
+            Debug.WriteIf(param != null, $"param: {param!.Value}");
             RecordCollection = receiver;
             Param = param;
         }

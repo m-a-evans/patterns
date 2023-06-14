@@ -1,6 +1,7 @@
 ﻿using Patterns.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
+using System.Diagnostics;
 
 namespace Patterns.Data.Command
 {
@@ -13,6 +14,8 @@ namespace Patterns.Data.Command
 
         public EditDataFileCommand(DataFile receiver, EditDataFileParam? param = null)
         {
+            Debug.Write("New EditDataFileCommand ");
+            Debug.WriteIf(param != null, $"param: {param!.Value}");
             DataFile = receiver;
             Param = param;
         }

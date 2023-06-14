@@ -80,12 +80,18 @@ namespace PatternsUI.ViewModel
 
         public bool IsDirty => _commandHistory.CurrentIndex != _commandHistorySaveIndex;
 
-        public bool IsFileXml { get; set; } = false;
+        public bool IsFileXml 
+        { 
+            get
+            {
+                return _currentFile?.Format == DataRecordFormat.Xml;
+            }
+        }
         public bool IsFileLoaded { get => _currentFile != null; }
         public bool IsFileNew { get; set; } = false;
         public bool IsEditingFileName { get; set; } = false;
         public string NewFileName { get; set; } = string.Empty;
-        public string FileName { get => _currentFile?.FileName != null ? Path.GetFileName(_currentFile.FileName) : string.Empty; } 
+        public string FileName { get => GetDisplayFileName(_currentFile?.FileName); }
 
         public RelayCommand EditFileNameCommand { get; private set; }
         public RelayCommand XmlSelectedCommand { get; private set; }
@@ -98,7 +104,6 @@ namespace PatternsUI.ViewModel
         public RelayCommand SaveCommand { get; private set; }
         public RelayCommand UndoCommand { get; private set; }
         public RelayCommand RedoCommand { get; private set; }
-        public RelayCommand RenameCommand { get; private set; }
         public RelayCommand SaveFileNameCommand { get; private set; }
 
 
@@ -118,7 +123,6 @@ namespace PatternsUI.ViewModel
             CloseCommand = new RelayCommand(CloseCurrentFile, CanCloseCommandExecute);
             UndoCommand = new RelayCommand(UndoLastCommand, CanUndoCommandExecute);
             RedoCommand = new RelayCommand(RedoLastCommand, CanRedoCommandExecute);
-            RenameCommand = new RelayCommand(RenameFile);
             EditFileNameCommand = new RelayCommand(SetEditFileNameMode);
             XmlSelectedCommand = new RelayCommand(SelectXmlFormat);
             JsonSelectedCommand = new RelayCommand(SelectJsonFormat);
@@ -153,6 +157,15 @@ namespace PatternsUI.ViewModel
 
         #region Private Methods
         
+        private string GetDisplayFileName(string? fullFileName)
+        {
+            if (string.IsNullOrWhiteSpace(fullFileName))
+            {
+                return string.Empty;
+            }
+            return Path.GetFileNameWithoutExtension(fullFileName);
+        }
+
         /// <summary>
         /// Starts event listeners for data record change events
         /// </summary>
@@ -214,15 +227,6 @@ namespace PatternsUI.ViewModel
             {
                 if (e.OldItems?.Count > 0 && e.OldItems[0] is DataRecord record)
                 {
-                    if (_commandHistory.LastExecutedCommand is CreateDataRecordCommand createCmd 
-                        && createCmd.State == CommandState.Unexecuted
-                        && createCmd.Param?.Value is DataRecord created
-                        && record.Id == created.Id)
-                    {
-                        // If this data record is being removed from undoing a create command, don't add to history
-                        // as a remove command
-                        return;
-                    }
                     PushToCommandHistory(new RemoveDataRecordCommand(_dataRecords, new RemoveDataRecordParam(record)));
                 }
             }
@@ -255,6 +259,8 @@ namespace PatternsUI.ViewModel
         {
             if (sender is DataRecord record)
             {
+                record.PropertyChanged -= OnDataRecordChanged;
+                record.PropertyChanging -= OnDataRecordChanging;
                 // If the property is one we can ignore, skip processing
                 if (_ignorableDataRecordProperties.Find(x => x == e.PropertyName) != null)
                 {
@@ -267,12 +273,14 @@ namespace PatternsUI.ViewModel
                 {
                     record.Id = Guid.NewGuid();
                     record.CreatedDate = DateTime.UtcNow;
-                    PushToCommandHistory(new CreateDataRecordCommand(_dataRecords, new CreateDataRecordParam(record.DeepCopy())));
+                    PushToCommandHistory(new CreateDataRecordCommand(_dataRecords, new CreateDataRecordParam(record)));
                 }
-                else if (_commandHistory.LastExecutedCommand?.State != CommandState.Unexecuted)
+                else 
                 {
-                    PushToCommandHistory(new EditDataRecordCommand(_dataRecords, new EditDataRecordParam(record, _oldRecord?.DeepCopy())));
+                    PushToCommandHistory(new EditDataRecordCommand(_dataRecords, new EditDataRecordParam(record, _oldRecord)));
                 }
+                record.PropertyChanged += OnDataRecordChanged;
+                record.PropertyChanging += OnDataRecordChanging;
             }
         }
 
@@ -283,13 +291,26 @@ namespace PatternsUI.ViewModel
         private void CreateNewDataFile(object? name)
         {
             string fileName = name as string ?? NewFileName;
-            _currentFile = new DataFile();
+            bool requiresSave = false;
+            if (_currentFile == null)
+            {
+                requiresSave = true;
+                _currentFile = new DataFile();
+            }
+            else
+            {
+                EditDataFileCommand
+            }
             _currentFile.Format = IsFileXml ? DataRecordFormat.Xml : DataRecordFormat.Json;            
             _currentFile.Path = DefaultDirectory;
             _currentFile.FileName = _currentFile.Path + "/" + AppendFileExtensionIfAbsent(fileName, _currentFile.Format);
             _commandHistory.FileName = _currentFile.FileName;
-            EnableDataRecordEventListeners();
-            SaveData(null);
+            
+            if (requiresSave)
+            {
+                EnableDataRecordEventListeners();
+                SaveData(null);
+            }            
         }
 
         /// <summary>
@@ -434,7 +455,8 @@ namespace PatternsUI.ViewModel
         private void SetEditFileNameMode(object? _)
         {
             IsEditingFileName = true;
-            NotifyPropertyChanged(nameof(IsEditingFileName));
+            NewFileName = FileName;
+            NotifyAllProperties();
         }
 
         /// <summary>
@@ -445,10 +467,8 @@ namespace PatternsUI.ViewModel
         {
             if (IsFileXml)
             {
-                IsFileXml = false;
-                SetDataRecordFormatCommand cmd = new(DataFile);
-
-                cmd.Execute(new SetDataRecordFormatParam(DataRecordFormat.Json));
+                SetDataRecordFormatCommand cmd = new(DataFile, new SetDataRecordFormatParam(DataRecordFormat.Json));
+                cmd.Execute();
                 PushToCommandHistory(cmd);
             }
         }
@@ -461,10 +481,8 @@ namespace PatternsUI.ViewModel
         {
             if (!IsFileXml)
             {
-                IsFileXml = true;
-                SetDataRecordFormatCommand cmd = new(DataFile);
-
-                cmd.Execute(new SetDataRecordFormatParam(DataRecordFormat.Xml));
+                SetDataRecordFormatCommand cmd = new(DataFile, new SetDataRecordFormatParam(DataRecordFormat.Xml));
+                cmd.Execute();
                 PushToCommandHistory(cmd);
             }
         }
@@ -494,6 +512,9 @@ namespace PatternsUI.ViewModel
             IDataRecordManager dataRecordManager = 
                 Coordinator.Instance.GetDataRecordManager(IsFileXml ? DataRecordFormat.Xml : DataRecordFormat.Json);
             CopyRecordsToFile(_currentFile, DataRecords);
+
+            // Make sure the file we're saving has the appropriate extension based on format
+            _currentFile.FileName = AppendFileExtensionIfAbsent(Path.GetFileNameWithoutExtension(_currentFile.FileName), _currentFile.Format);
             _ = dataRecordManager.WriteDataRecords(_currentFile);
 
             _commandHistorySaveIndex = _commandHistory.CurrentIndex;
@@ -576,7 +597,6 @@ namespace PatternsUI.ViewModel
             if (_currentFile != null)
             {
                 IsFileNew = false;
-                IsFileXml = _currentFile.Format == DataRecordFormat.Xml;
                 IsEditingFileName = false;
                 CopyRecordsFromFile(_currentFile, _dataRecords);
 
@@ -592,7 +612,6 @@ namespace PatternsUI.ViewModel
         {
             IsEditingFileName = false;
             IsFileNew = false;
-            IsFileXml = false;
 
             _currentFile = null;
             _commandHistory.Reset();
@@ -610,11 +629,11 @@ namespace PatternsUI.ViewModel
             NotifyPropertyChanged(nameof(IsDirty));
             NotifyPropertyChanged(nameof(IsEditingFileName));
             NotifyPropertyChanged(nameof(IsFileLoaded));
-            NotifyPropertyChanged(nameof(IsFileLoaded));
             NotifyPropertyChanged(nameof(IsFileNew));
             NotifyPropertyChanged(nameof(IsFileXml));
             NotifyPropertyChanged(nameof(DataFile));
             NotifyPropertyChanged(nameof(FileName));
+            NotifyPropertyChanged(nameof(NewFileName));
         }
 
         /// <summary>
@@ -674,11 +693,6 @@ namespace PatternsUI.ViewModel
             });
         }
 
-        private void RenameFile(object? _)
-        {
-
-        }
-
         private void NavigateToUserManagement(object? _)
         {
             Action navAction = () => Navigate<UserManagementView>();
@@ -705,7 +719,7 @@ namespace PatternsUI.ViewModel
             {
                 new MenuItem() { Header = "Undo", Command = UndoCommand },
                 new MenuItem() { Header = "Redo", Command = RedoCommand },
-                new MenuItem() { Header = "Rename", Command = RenameCommand },
+                new MenuItem() { Header = "Rename", Command = EditFileNameCommand },
             };
             HelpMenuItems = new()
             {

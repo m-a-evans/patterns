@@ -25,5 +25,16 @@ namespace Patterns.Data.Model
                 DataRecords = sortedCopy
             };
         }
+
+        public override string ToString()
+        {
+            string retVal = $"DataFile: [ Name: \"{FileName}\"\nPath: \"{Path}\"\nFormat: {Format}\n[";
+            foreach (DataRecord record in DataRecords.Values)
+            {
+                retVal += $"{{{record}}}\n";
+            }
+            retVal += "]]" ;
+            return retVal;
+        }
     }
 }

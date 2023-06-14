@@ -1,5 +1,7 @@
-﻿using Patterns.Command;
+﻿using CommunityToolkit.Diagnostics;
+using Patterns.Command;
 using Patterns.Data.Command;
+using System;
 using System.Collections.Generic;
 
 namespace PatternsUI.Model
@@ -64,7 +66,10 @@ namespace PatternsUI.Model
             }
             else
             {
+                // If we are replacing a command, that means one or more undo operations
+                // occurred, and we are starting a new history from that point on
                 History[CurrentIndex] = command;
+                RemoveHistoryEntriesAfterIndex(CurrentIndex);
             }            
         }
 
@@ -85,19 +90,45 @@ namespace PatternsUI.Model
             }
         }
 
+        /// <summary>
+        /// Returns a range of commands based on the index. If the current index
+        /// is before
+        /// </summary>
+        /// <param name="fromIndex"></param>
+        /// <returns></returns>
         public List<DataCommand> GetRelativeHistory(int fromIndex)
         {
-            if (History.Count == 0 || fromIndex == CurrentIndex)
+            if (History.Count == 0)
             {
                 return new List<DataCommand>();
             }
-            else if (fromIndex < CurrentIndex)
+            else if (fromIndex <= CurrentIndex)
             {
-                return History.GetRange(fromIndex, CurrentIndex + 1);
+                // Get everything from the fromIndex up to the current index
+                int minIndex = Math.Max(0, fromIndex);
+                return History.GetRange(minIndex, CurrentIndex + 1 - minIndex);
             }
             else
             {
-                return History.GetRange(CurrentIndex + 1, fromIndex);
+                // Get everything from the current index up to the fromIndex
+                int maxIndex = Math.Min(History.Count - 1, fromIndex);
+                return History.GetRange(CurrentIndex, maxIndex - CurrentIndex + 1);
+            }
+        }
+
+        /// <summary>
+        /// Removes all History entries after the supplied index. Leaves the element at the index intact.
+        /// </summary>
+        /// <param name="index"></param>
+        private void RemoveHistoryEntriesAfterIndex(int index) 
+        {
+            if (index >= History.Count || index < 0)
+            {
+                ThrowHelper.ThrowArgumentException($"Index out of range. given: {index} valid range: [0,{History.Count})");
+            }
+            for (int i = History.Count - 1; i > index; i--)
+            {
+                History.RemoveAt(i);
             }
         }
     }

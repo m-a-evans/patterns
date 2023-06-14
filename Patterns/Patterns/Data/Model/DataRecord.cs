@@ -116,6 +116,15 @@ namespace Patterns.Data.Model
         public event PropertyChangedEventHandler? PropertyChanged;
         public event PropertyChangingEventHandler? PropertyChanging;
 
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Creates a new DataRecord identical to this one. Does not
+        /// copy event handlers.
+        /// </summary>
+        /// <returns></returns>
         public DataRecord DeepCopy()
         {
             return new DataRecord
@@ -127,9 +136,12 @@ namespace Patterns.Data.Model
                 DateModified = DateModified
             };
         }
-        #endregion
 
-        #region Methods
+        public override string ToString()
+        {
+            return $"DataRecord: [ Id: {Id},\nName: \"{DataRecordName}\"\nDescription: \"{Description}\" ]\n";
+        }
+
         /// <summary>
         /// For simplicity, a data record is considered equal only if the GUID is equal
         /// </summary>
@@ -142,6 +154,10 @@ namespace Patterns.Data.Model
             return other.Id == Id;
         }
 
+        /// <summary>
+        /// Returns a hash code based on the object's Id
+        /// </summary>
+        /// <returns></returns>
         public override int GetHashCode()
         {
             return Id.GetHashCode();

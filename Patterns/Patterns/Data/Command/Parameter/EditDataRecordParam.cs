@@ -13,8 +13,8 @@ namespace Patterns.Data.Command.Parameter
 
         public EditDataRecordParam(DataRecord newState, DataRecord? previousState = null)
         {
-            DataRecord = newState;
-            PreviousState = previousState;
+            DataRecord = newState.DeepCopy();
+            PreviousState = previousState?.DeepCopy();
         }
     }
 }

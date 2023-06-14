@@ -3,6 +3,7 @@ using Patterns.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Patterns.Data.Command
@@ -12,6 +13,8 @@ namespace Patterns.Data.Command
         public override string Name => nameof(CreateDataRecordCommand);
         public CreateDataRecordCommand(ICollection<DataRecord> receiver, CreateDataRecordParam? param = null)
         {
+            Debug.Write("New CreateDataRecordCommand ");
+            Debug.WriteIf(param != null, $"param: {param!.Value}");
             RecordCollection = receiver;
             Param = param;
         }

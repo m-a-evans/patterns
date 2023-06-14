@@ -18,7 +18,7 @@ namespace Patterns.Data.Command.Parameter
 
         public RemoveDataRecordParam(DataRecord dataRecord)
         {
-            DataRecord = dataRecord;
+            DataRecord = dataRecord.DeepCopy();
         }
     }
 }

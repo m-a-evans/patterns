@@ -13,7 +13,7 @@ namespace Patterns.Data.Command.Parameter
 
         public CreateDataRecordParam(DataRecord dataRecord)
         {
-            DataRecord = dataRecord;
+            DataRecord = dataRecord.DeepCopy();
         }
     }
 }
