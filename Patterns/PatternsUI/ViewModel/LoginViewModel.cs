@@ -117,6 +117,10 @@ namespace PatternsUI.ViewModel
             }
         }
 
+        #endregion
+
+        #region Private Methods
+
         /// <summary>
         /// Displays the reason for logout in the error text
         /// </summary>

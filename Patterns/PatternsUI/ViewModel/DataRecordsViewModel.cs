@@ -129,6 +129,7 @@ namespace PatternsUI.ViewModel
             SaveFileNameCommand = new RelayCommand(CreateNewDataFile);
 
             PrepareMenuItems();
+            CheckForRecoveryFile();
         }
 
         public override void RequestExit(Action exit, string? message)
@@ -291,26 +292,21 @@ namespace PatternsUI.ViewModel
         private void CreateNewDataFile(object? name)
         {
             string fileName = name as string ?? NewFileName;
-            bool requiresSave = false;
             if (_currentFile == null)
             {
-                requiresSave = true;
                 _currentFile = new DataFile();
             }
             else
             {
-                EditDataFileCommand
+                DisableDataRecordEventListeners();
             }
             _currentFile.Format = IsFileXml ? DataRecordFormat.Xml : DataRecordFormat.Json;            
             _currentFile.Path = DefaultDirectory;
             _currentFile.FileName = _currentFile.Path + "/" + AppendFileExtensionIfAbsent(fileName, _currentFile.Format);
             _commandHistory.FileName = _currentFile.FileName;
             
-            if (requiresSave)
-            {
-                EnableDataRecordEventListeners();
-                SaveData(null);
-            }            
+            EnableDataRecordEventListeners();
+            SaveData(null);         
         }
 
         /// <summary>
@@ -364,7 +360,7 @@ namespace PatternsUI.ViewModel
         {
             DisableDataRecordEventListeners();
             _commandHistory.Redo();
-            //SaveCommandHistory();
+            SaveCommandHistory();
             EnableDataRecordEventListeners();
             NotifyAllProperties();
         }
@@ -387,7 +383,7 @@ namespace PatternsUI.ViewModel
         {
             DisableDataRecordEventListeners();
             _commandHistory.Undo();
-            //SaveCommandHistory();
+            SaveCommandHistory();
             EnableDataRecordEventListeners();
             NotifyAllProperties();
         }
@@ -399,7 +395,7 @@ namespace PatternsUI.ViewModel
         private void PushToCommandHistory(DataCommand cmd)
         {
             _commandHistory.AddCommand(cmd);
-            //SaveCommandHistory();
+            SaveCommandHistory();
 
         }
 
