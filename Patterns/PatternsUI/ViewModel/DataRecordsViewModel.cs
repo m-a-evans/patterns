@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Microsoft.Win32;
 using Patterns;
-using Patterns.Command;
 using Patterns.Data.Command;
 using Patterns.Data.Command.Parameter;
 using Patterns.Data.Model;
@@ -15,10 +14,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
 using System.Windows.Controls;
 
 namespace PatternsUI.ViewModel
@@ -49,12 +45,9 @@ namespace PatternsUI.ViewModel
 
         private readonly object _saveHistoryLock = new();
 
-        private const string PatternzCommandListName = ".pcl";
         private const string DefaultDirectory = "../../../../data";
 
         private ObservableCollection<DataRecord> _dataRecords = new();
-
-        private Tuple<string, DataRecord> _propertyUpdatingHelper;
 
         #endregion
 
@@ -129,7 +122,6 @@ namespace PatternsUI.ViewModel
             SaveFileNameCommand = new RelayCommand(CreateNewDataFile);
 
             PrepareMenuItems();
-            CheckForRecoveryFile();
         }
 
         public override void RequestExit(Action exit, string? message)
@@ -360,7 +352,6 @@ namespace PatternsUI.ViewModel
         {
             DisableDataRecordEventListeners();
             _commandHistory.Redo();
-            SaveCommandHistory();
             EnableDataRecordEventListeners();
             NotifyAllProperties();
         }
@@ -383,7 +374,6 @@ namespace PatternsUI.ViewModel
         {
             DisableDataRecordEventListeners();
             _commandHistory.Undo();
-            SaveCommandHistory();
             EnableDataRecordEventListeners();
             NotifyAllProperties();
         }
@@ -395,42 +385,6 @@ namespace PatternsUI.ViewModel
         private void PushToCommandHistory(DataCommand cmd)
         {
             _commandHistory.AddCommand(cmd);
-            SaveCommandHistory();
-
-        }
-
-        /// <summary>
-        /// Checks for a recovery file in the local directory, allowing the user
-        /// to recover lost work
-        /// </summary>
-        private void CheckForRecoveryFile()
-        {
-            if (!File.Exists(PatternzCommandListName))
-            {
-                return;
-            }
-
-            CommandHistory? commandHistory = JsonSerializer.Deserialize<CommandHistory>(PatternzCommandListName);
-
-            if (commandHistory == null)
-            {
-                return;
-            }
-
-            if (!File.Exists(commandHistory.FileName))
-            {
-                return;
-            }
-            string justFileName = Path.GetFileName(commandHistory.FileName);
-            Messenger.Send(new ShowYesNoPopupMessage("Recover file?", $"Patternz has detected that {justFileName} has changes that can be recovered. Proceed?", 
-                (yes) =>
-                {
-                    if (yes)
-                    {
-                        RecoverFile(commandHistory);
-                    }
-                })
-            );
         }
 
         /// <summary>
@@ -642,9 +596,6 @@ namespace PatternsUI.ViewModel
             {
                 DisableDataRecordEventListeners();
                 ResetAllProperties();
-
-                // Delete command history file
-                File.Delete(PatternzCommandListName);
                 
                 Messenger.Send(new ClearUIMessage());
                 Messenger.Send(new ClearFocusMessage());
@@ -666,35 +617,12 @@ namespace PatternsUI.ViewModel
             }
         }
 
-        private void SaveCommandHistory()
-        {
-            Task saveCmd = Task.Run(() =>
-            {
-                lock (_saveHistoryLock)
-                {
-                    File.WriteAllText(PatternzCommandListName,
-                    JsonSerializer.Serialize(new CommandHistory()
-                    {
-                        FileName = FileName,
-                        // Get all commands executed since last Save
-                        // TODO - make this store a list of commands in order from here since last save
-                        History = _commandHistory.GetRelativeHistory(_commandHistorySaveIndex)
-                    })); ;
-                }
-            }).ContinueWith((t) => {
-                if (t.IsFaulted)
-                {
-                    Debug.WriteLine(t.Exception?.Message);
-                }
-            });
-        }
-
         private void NavigateToUserManagement(object? _)
         {
             Action navAction = () => Navigate<UserManagementView>();
             if (IsDirty) 
             {
-                RequestExit(navAction, "Are you sure you want to leave?");
+                RequestExit(navAction, "Are you sure you want to leave? Unsaved changes will be lost");
             }
             else
             {
