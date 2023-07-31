@@ -2,7 +2,6 @@
 using Patterns.Data.Model;
 using Patterns.IO;
 using System.Configuration;
-using Windows.ApplicationModel.Appointments;
 
 namespace Patterns
 {
@@ -11,7 +10,7 @@ namespace Patterns
     /// </summary>
     public class Coordinator : ICoordinator
     {
-        private static Coordinator? _instance;
+        private static ICoordinator? _instance;
         private const string UserRecordLocationName = "UserRecordLocation";
         private string? _userRecordLocation;
         private UserManager _userManager;
@@ -38,11 +37,7 @@ namespace Patterns
         {
             get
             {
-                if (_userManager == null)
-                {
-                    _userManager = new UserManager(_userRecordLocation);
-                }
-                return _userManager;
+                return _userManager ??= new UserManager(_userRecordLocation);
             }
         }
 
@@ -53,7 +48,7 @@ namespace Patterns
         /// <returns></returns>
         public IDataRecordManager GetDataRecordManager(DataRecordFormat dataRecordManagerFormat)
         {
-            return DataRecordManagerFactory.GetUserRecordManager(UserManager.CurrentUser, dataRecordManagerFormat);
+            return DataRecordManagerFactory.GetDataRecordManager(UserManager.CurrentUser, dataRecordManagerFormat);
         }
 
         /// <summary>
@@ -86,7 +81,7 @@ namespace Patterns
         /// <returns></returns>
         public IDataRecordManager GetDataRecordManager(string fileName)
         {
-            return DataRecordManagerFactory.GetUserRecordManager(UserManager.CurrentUser, fileName);
+            return DataRecordManagerFactory.GetDataRecordManager(UserManager.CurrentUser, fileName);
         }
     }
 }

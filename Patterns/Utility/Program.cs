@@ -11,11 +11,17 @@ namespace Utility
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            const string PathToStore = @".\data\users.dat";
+            const string PathToStore = @"..\..\..\..\data\";
+            const string UserStore = "users.dat";
 
-            Console.WriteLine($"Creating user account at {Path.GetFullPath(PathToStore)}");
+            if (!Directory.Exists(PathToStore)) 
+            {
+                Directory.CreateDirectory(PathToStore);
+            }
 
-            if (File.Exists(PathToStore)) 
+            Console.WriteLine($"Creating user account at {Path.GetFullPath(PathToStore + UserStore)}");
+
+            if (File.Exists(PathToStore + UserStore)) 
             {
                 Console.WriteLine("Store already exists! Aborting...");
                 return;
@@ -35,7 +41,7 @@ namespace Utility
 
             acct.UpdateUser(admin);
 
-            Task<bool> writeTask = acct.TryWriteUsersToStoreAsync(PathToStore);
+            Task<bool> writeTask = acct.TryWriteUsersToStoreAsync(PathToStore + UserStore);
             writeTask.Wait();
 
             if (writeTask.IsFaulted || !writeTask.Result) 
@@ -44,7 +50,7 @@ namespace Utility
             }
             else
             {
-                Console.WriteLine($"User written to {Path.GetFullPath(PathToStore)}!");
+                Console.WriteLine($"User written to {Path.GetFullPath(PathToStore + UserStore)}!");
             }
 
             Console.WriteLine("Done");

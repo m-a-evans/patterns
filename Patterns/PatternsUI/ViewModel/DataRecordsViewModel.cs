@@ -295,7 +295,6 @@ namespace PatternsUI.ViewModel
             _currentFile.Format = IsFileXml ? DataRecordFormat.Xml : DataRecordFormat.Json;            
             _currentFile.Path = DefaultDirectory;
             _currentFile.FileName = _currentFile.Path + "/" + AppendFileExtensionIfAbsent(fileName, _currentFile.Format);
-            _commandHistory.FileName = _currentFile.FileName;
             
             EnableDataRecordEventListeners();
             SaveData(null);         
@@ -385,17 +384,6 @@ namespace PatternsUI.ViewModel
         private void PushToCommandHistory(DataCommand cmd)
         {
             _commandHistory.AddCommand(cmd);
-        }
-
-        /// <summary>
-        /// Loads a file and redoes its entire command history
-        /// </summary>
-        /// <param name="commandHistory"></param>
-        private void RecoverFile(CommandHistory commandHistory)
-        {
-            LoadFileByName(commandHistory.FileName);
-            _commandHistory = commandHistory;
-            _commandHistory.ExecuteEntireHistory();
         }
 
         /// <summary>

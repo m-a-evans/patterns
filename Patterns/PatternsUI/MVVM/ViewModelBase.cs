@@ -1,10 +1,6 @@
 ﻿using CommunityToolkit.Diagnostics;
-using PatternsUI.View;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Windows.Controls;
 
 namespace PatternsUI.MVVM

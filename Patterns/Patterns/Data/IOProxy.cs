@@ -11,7 +11,7 @@ namespace Patterns.Data
     internal class IOProxy : IDataRecordManager
     {
         private readonly IPatternzUser _user;
-        private readonly IDataRecordManager _userManager;
+        private readonly IDataRecordManager _dataRecordManager;
 
         /// <summary>
         /// Creates a new instance of this class, with a user to check permissions against
@@ -21,7 +21,7 @@ namespace Patterns.Data
         public IOProxy(IPatternzUser user, IDataRecordManager manager)
         {
             _user = user;
-            _userManager = manager;
+            _dataRecordManager = manager;
         }
 
         /// <summary>
@@ -35,7 +35,7 @@ namespace Patterns.Data
             dataFile = null;
             if ((_user.Permissions & Permission.ReadAccess) == Permission.ReadAccess)
             {
-                return _userManager.TryParseRecords(recordName, out dataFile);
+                return _dataRecordManager.TryParseRecords(recordName, out dataFile);
             }
             return ThrowHelper.ThrowUnauthorizedAccessException<bool>();
         }
@@ -49,7 +49,7 @@ namespace Patterns.Data
         {
             if ((_user.Permissions & Permission.WriteAccess) == Permission.WriteAccess)
             {
-                return _userManager.WriteDataRecords(dataFile);
+                return _dataRecordManager.WriteDataRecords(dataFile);
             }
             return ThrowHelper.ThrowUnauthorizedAccessException<long>();
         }

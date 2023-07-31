@@ -18,7 +18,7 @@ namespace Patterns.IO
         /// <param name="currentUser">The user trying to use the DataRecordManager</param>
         /// <param name="format">The format of DataRecordManager to get</param>
         /// <returns>The concrete instance</returns>
-        public static IDataRecordManager GetUserRecordManager(IPatternzUser currentUser, DataRecordFormat format)
+        public static IDataRecordManager GetDataRecordManager(IPatternzUser currentUser, DataRecordFormat format)
         {
             switch (format)
             {
@@ -36,7 +36,7 @@ namespace Patterns.IO
         /// <param name="currentUser">The user trying to use the DataRecordManager</param>
         /// <param name="fileName">The filename including extension the user intends to parse</param>
         /// <returns>The concrete instance</returns>
-        public static IDataRecordManager GetUserRecordManager(IPatternzUser currentUser, string fileName)
+        public static IDataRecordManager GetDataRecordManager(IPatternzUser currentUser, string fileName)
         {
             if (fileName.ToLower().EndsWith(Xml))
             {

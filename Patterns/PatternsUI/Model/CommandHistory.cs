@@ -13,8 +13,6 @@ namespace PatternsUI.Model
         public int CurrentIndex { get; private set; } = EmptyCommandHistoryIndex;
        
         public DataCommand? LastExecutedCommand { get; private set; }
-
-        public string FileName { get; set; } = string.Empty;
         public List<DataCommand> History { get; set; } = new List<DataCommand>();
 
         public bool CanRedo()
@@ -75,7 +73,6 @@ namespace PatternsUI.Model
 
         public void Reset()
         {
-            FileName = string.Empty;
             CurrentIndex = EmptyCommandHistoryIndex;
             History.Clear();
         }

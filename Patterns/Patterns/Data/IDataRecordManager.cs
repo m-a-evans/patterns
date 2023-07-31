@@ -1,5 +1,4 @@
 ﻿using Patterns.Data.Model;
-using System.Collections.Generic;
 
 namespace Patterns.IO
 {
