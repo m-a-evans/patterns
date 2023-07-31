@@ -1,0 +1,62 @@
+﻿<Window x:Class="PatternsUI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:converters="clr-namespace:PatternsUI.Converters"
+        xmlns:vm="clr-namespace:PatternsUI.ViewModel"
+        xmlns:view="clr-namespace:PatternsUI.View"
+        mc:Ignorable="d"
+        Title="Patternz" Height="450" Width="800"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <vm:MainWindowViewModel x:Key="ViewModel"/>
+        <converters:BoolToVisibilityConverter x:Key="BoolToVisibility"/>
+        <converters:IntToVisibilityConverter x:Key="IntToVisibility"/>
+    </Window.Resources>
+    
+    <Grid DataContext="{StaticResource ViewModel}" >
+        <Grid x:Name="FocusSink" Focusable="True"/>
+        <!-- Page Content -->
+        <Grid x:Name="ContentViewGrid" MouseDown="ContentViewGrid_MouseDown">
+            <view:PatternzView Content="{Binding CurrentPage}"/>
+        </Grid>
+        <!-- End Page Content -->
+        <Grid Visibility="{Binding IsMenuVisible, Converter={StaticResource BoolToVisibility}}">
+            <!-- Menu -->
+            <Grid x:Name="MenuGrid" 
+              Height="20" 
+              VerticalAlignment="Top" 
+              Margin="0">
+                <Menu x:Name="MainMenu">
+                    <MenuItem x:Name="File" Header="File" ItemsSource="{Binding FileMenuItems}"/>
+                    <MenuItem x:Name="Edit" Header="Edit" ItemsSource="{Binding EditMenuItems}" 
+                              Visibility="{Binding EditMenuItems.Count, Mode=OneWay, Converter={StaticResource IntToVisibility}}"/>
+                    <MenuItem x:Name="View" Header="View" ItemsSource="{Binding ViewMenuItems}"
+                              Visibility="{Binding ViewMenuItems.Count, Mode=OneWay, Converter={StaticResource IntToVisibility}}"/>
+                    <MenuItem x:Name="Help" Header="Help" ItemsSource="{Binding HelpMenuItems}"
+                              Visibility="{Binding HelpMenuItems.Count, Mode=OneWay, Converter={StaticResource IntToVisibility}}"/>
+                </Menu>
+            </Grid>
+            <!-- End Menu -->
+            <!-- Profile Box -->
+            <Grid x:Name="ProfileOptions" HorizontalAlignment="Right" Background="Transparent" Height="70" Width="45" VerticalAlignment="Top" Margin="10,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition Height="25"/>
+                </Grid.RowDefinitions>
+                <Button x:Name="Profile" HorizontalAlignment="Right" Grid.Row="0" Click="Profile_Click">
+                    <Button.Content>
+                        <Image Name="ProfilePic" Source="{Binding CurrentUserPicture}"/>
+                    </Button.Content>
+                </Button>
+                <Label Content="{Binding CurrentUserName}" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="-3,0,0,0"/>
+                <Button x:Name="LogoutButton" Content="Logout" Grid.Row="1" Command="{Binding LogoutCommand}" Visibility="Collapsed"/>
+            </Grid>
+            <!-- End Profile Box-->
+        </Grid>
+        <Grid x:Name="Shade" Visibility="Collapsed" Background="Black" Opacity="0.3"/>
+    </Grid>
+</Window>
