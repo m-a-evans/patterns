@@ -474,6 +474,7 @@ namespace PatternsUI.ViewModel
         /// <param name="_"></param>
         private void TurnOnAddUserMode(object? _) 
         {
+            ClearUserEntries();
             IsAddingUser = true;
             IsEditingUser = false;
             NotifyPropertyChanged(nameof(IsAddingOrEditingUser));
