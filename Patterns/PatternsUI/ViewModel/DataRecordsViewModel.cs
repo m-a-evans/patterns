@@ -447,14 +447,24 @@ namespace PatternsUI.ViewModel
                 ThrowHelper.ThrowInvalidOperationException("Unable to save data. Current File is null");
             }
 
-            IDataRecordManager dataRecordManager = 
-                Coordinator.Instance.GetDataRecordManager(IsFileXml ? DataRecordFormat.Xml : DataRecordFormat.Json);
-            CopyRecordsToFile(_currentFile, DataRecords);
 
+            List<DataRecord> temp = new();
             // Make sure the file we're saving has the appropriate extension based on format
             _currentFile.FileName = AppendFileExtensionIfAbsent(Path.GetFileNameWithoutExtension(_currentFile.FileName), _currentFile.Format);
-            _ = dataRecordManager.WriteDataRecords(_currentFile);
-
+            try
+            {
+                IDataRecordManager dataRecordManager =
+                Coordinator.Instance.GetDataRecordManager(IsFileXml ? DataRecordFormat.Xml : DataRecordFormat.Json);
+                CopyRecordsFromFile(_currentFile, temp);
+                CopyRecordsToFile(_currentFile, DataRecords);
+                _ = dataRecordManager.WriteDataRecords(_currentFile);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                CopyRecordsToFile(_currentFile, temp);
+                Messenger.Send(new ShowPopupMessage("Access Denied", "You do not have the required permissions to perform this operation"));
+                return;
+            }
             _commandHistorySaveIndex = _commandHistory.CurrentIndex;
 
             IsEditingFileName = false;
@@ -530,7 +540,15 @@ namespace PatternsUI.ViewModel
         {
             _currentFile = null;
             IDataRecordManager dataRecordManager = Coordinator.Instance.GetDataRecordManager(fileName);
-            _ = dataRecordManager.TryParseRecords(fileName, out _currentFile);
+            try
+            {
+                _ = dataRecordManager.TryParseRecords(fileName, out _currentFile);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                Messenger.Send(new ShowPopupMessage("Access Denied", "You do not have the require permission to perform this operation"));
+                return;
+            }
 
             if (_currentFile != null)
             {
